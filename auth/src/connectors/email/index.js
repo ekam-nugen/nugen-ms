@@ -1,7 +1,5 @@
 import bcrypt from 'bcrypt';
-import mongoose from 'mongoose';
-import { config } from '../../config/index.js';
-import { User } from '../../schemas/user.js';
+import { User } from '../../schemas/user.schema.js';
 
 /**
  * Email/Password Authentication Connector
@@ -15,6 +13,7 @@ export class EmailConnector {
    */
   async signup({ email, password, name }) {
     try {
+      console.log(email, password, name, 'email, password, name');
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         throw new Error('User already exists');

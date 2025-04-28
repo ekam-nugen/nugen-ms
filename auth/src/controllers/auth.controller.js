@@ -1,62 +1,66 @@
-import jwt from 'jsonwebtoken';
-import { JWT_EXPIRATION, JWT_SECRET } from '../config/index.js';
+import { AuthService } from '../service/auth.service.js';
+import superConnector from '../connectors/super.connector.js';
 
-class AuthService {
+/**
+ * Authentication Controller
+ * @class
+ */
+export class AuthController {
   /**
-   * Generate JWT token
-   * @param {Object} user - User data
-   * @returns {string} JWT token
+   * Get login URL for social provider
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
    */
-  static generateToken(user) {
-    return jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-        provider: user.provider,
-      },
-      JWT_SECRET,
-      {
-        expiresIn: JWT_EXPIRATION,
-      },
-    );
+  static async getLoginUrl(req, res) {
+    try {
+      const { provider } = req.params;
+      const url = await superConnector.getLoginUrl(provider);
+      res.json({ url });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
 
   /**
-   * Handle social login
-   * @param {string} provider - Provider name
-   * @param {Object} params - Callback parameters
-   * @returns {Object} User data and token
+   * Handle social login callback
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
    */
-  static async handleSocialLogin(provider, params) {
-    // const user = await superConnector.handleCallback(provider, params);
-    // const token = this.generateToken(user);
-    // return { user, token };
+  static async handleSocialCallback(req, res) {
+    try {
+      const { provider } = req.params;
+      const result = await AuthService.handleSocialLogin(provider, req.query);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
 
   /**
    * Handle email signup
-   * @param {Object} params - User details
-   * @returns {Object} User data and token
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
    */
-  static async handleEmailSignup(params) {
-    const emailConnector = superConnector.getProvider('email');
-    const user = await emailConnector.signup(params);
-    const token = this.generateToken(user);
-    return { user, token };
+  static async emailSignup(req, res) {
+    try {
+      const result = await AuthService.handleEmailSignup(req.body);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
 
   /**
    * Handle email login
-   * @param {Object} params - Login credentials
-   * @returns {Object} User data and token
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
    */
-  static async handleEmailLogin(params) {
-    const emailConnector = superConnector.getProvider('email');
-    const user = await emailConnector.login(params);
-    const token = this.generateToken(user);
-    return { user, token };
+  static async emailLogin(req, res) {
+    try {
+      const result = await AuthService.handleEmailLogin(req.body);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
 }
-
-export default AuthService;

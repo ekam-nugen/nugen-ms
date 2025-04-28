@@ -10,6 +10,8 @@ import swaggerUi from 'swagger-ui-express';
 import { MONGO_URI as DB_URI } from './config/index.js';
 import logger from './config/logger.js';
 import Routes from './routes/index.js';
+import superConnector from './connectors/super.connector.js';
+import { EmailConnector } from './connectors/email/index.js';
 
 // const swaggerDocument = YAML.load('./api.documentation.yaml');
 
@@ -28,6 +30,8 @@ try {
 } catch (error) {
   console.log(error);
 }
+
+superConnector.registerProvider('email', new EmailConnector())
 
 app.get('/health-check', async (req, res) => {
   return res.status(200).json({

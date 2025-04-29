@@ -1,4 +1,4 @@
-export const emailConnectorSchema = {
+export const emailSignUpSchema = {
   type: 'object',
   properties: {
     email: { type: 'string' },

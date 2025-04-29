@@ -1,3 +1,3 @@
 import ErrorMiddleware from './error.middleware.js';
-
-export { ErrorMiddleware };
+import AgvValidator from './ajv-validator.middleware.js';
+export { ErrorMiddleware, AgvValidator };

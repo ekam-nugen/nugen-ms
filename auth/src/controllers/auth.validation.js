@@ -1,0 +1,10 @@
+export const emailConnectorSchema = {
+  type: 'object',
+  properties: {
+    email: { type: 'string' },
+    password: { type: 'string' },
+    name: { type: 'string' },
+  },
+  required: ['email', 'password', 'name'],
+  additionalProperties: false,
+};

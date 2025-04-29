@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import { User } from '../../schemas/user.schema.js';
-
 /**
  * Email/Password Authentication Connector
  * @class

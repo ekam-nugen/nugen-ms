@@ -1,5 +1,7 @@
 import { AuthService } from '../service/auth.service.js';
 import superConnector from '../connectors/super.connector.js';
+import AgvValidator from '../middlewares/ajv-validator.middleware.js';
+import { emailConnectorSchema }  from './auth.validation.js';
 
 /**
  * Authentication Controller
@@ -43,6 +45,18 @@ export class AuthController {
    */
   static async emailSignup(req, res) {
     try {
+      // Validate the request body
+      // const { email, password, name } = req.body;
+      const validatEmailConnector =  AgvValidator.ajvValidator(emailConnectorSchema,
+        { email, password }
+      );
+
+      if(!validatEmailConnector.isValid){
+        return res.status(400).json({
+          message: "Invalid Input Errors",
+          error: validatEmailConnector?.errors
+        })
+      }
       const result = await AuthService.handleEmailSignup(req.body);
       res.json(result);
     } catch (error) {

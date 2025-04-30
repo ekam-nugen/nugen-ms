@@ -5,7 +5,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon ./src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "debug": "node --inspect src/index.js",
+    "lint": "eslint src",
+    "format": "prettier --write src/**/*.{js,jsx}"
   },
   "author": "",
   "license": "ISC",
@@ -13,12 +17,14 @@
     "ajv": "^8.17.1",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^3.0.1",
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.1",
     "callsite": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
+    "google-auth-library": "^9.15.1",
     "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",

@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: Authentication Microservice API
+  description: A modular authentication microservice supporting Google, Facebook, and email/password authentication.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+tags:
+  - name: Social Authentication
+  - name: Email Authentication
+paths:
+  /auth/{provider}/login:
+    get:
+      tags: [Social Authentication]
+      summary: Get login URL for social provider
+      description: Returns the OAuth login URL for the specified social provider (Google or Facebook).
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, facebook]
+          description: The social provider (google or facebook).
+      responses:
+        '200':
+          description: Successful response with the login URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: https://accounts.google.com/o/oauth2/v2/auth?...
+                required: [url]
+        '400':
+          description: Invalid provider specified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/{provider}/callback:
+    get:
+      tags: [Social Authentication]
+      summary: Handle social provider callback
+      description: Handles the OAuth callback from the social provider and returns user data and JWT token.
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, facebook]
+          description: The social provider (google or facebook).
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The authorization code from the provider.
+      responses:
+        '200':
+          description: Successful authentication with user data and token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Missing authorization code or invalid provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/email/signup:
+    post:
+      tags: [Email Authentication]
+      summary: Email signup
+      description: Registers a new user with email, password, and name, returning user data and JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: yourpassword
+                name:
+                  type: string
+                  example: John Doe
+              required: [email, password, name]
+      responses:
+        '200':
+          description: Successful signup with user data and token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Missing or invalid fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: User already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/email/login:
+    post:
+      tags: [Email Authentication]
+      summary: Email login
+      description: Authenticates a user with email and password, returning user data and JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: yourpassword
+              required: [email, password]
+      responses:
+        '200':
+          description: Successful login with user data and token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Missing or invalid fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials or user not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 507f1f77bcf86cd799439011
+            email:
+              type: string
+              example: user@example.com
+            name:
+              type: string
+              example: John Doe
+            provider:
+              type: string
+              example: email
+          required: [id, email, name, provider]
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      required: [user, token]
+    ErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            type:
+              type: string
+              example: Missing Fields
+            message:
+              type: string
+              example: Email, Password, Name are required
+            statusCode:
+              type: integer
+              example: 400
+          required: [type, message, statusCode]
+      required: [errors]

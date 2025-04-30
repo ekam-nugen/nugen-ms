@@ -1,5 +1,6 @@
 import { AuthService } from '../service/auth.service.js';
 import superConnector from '../connectors/super.connector.js';
+import log from '../config/logger.js';
 
 /**
  * Authentication Controller
@@ -12,13 +13,13 @@ export class AuthController {
    * @param {Object} res - Response object
    */
   static async getLoginUrl(req, res) {
-    try {
-      const { provider } = req.params;
-      const url = await superConnector.getLoginUrl(provider);
-      res.json({ url });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    const { provider } = req.params;
+    if (!['google', 'facebook'].includes(provider)) {
+      throw new ValidationError('Invalid provider');
     }
+    const url = await superConnector.getLoginUrl(provider);
+    log.info(`Generated login URL for provider: ${provider}`);
+    res.json({ url });
   }
 
   /**
@@ -27,13 +28,13 @@ export class AuthController {
    * @param {Object} res - Response object
    */
   static async handleSocialCallback(req, res) {
-    try {
-      const { provider } = req.params;
-      const result = await AuthService.handleSocialLogin(provider, req.query);
-      res.json(result);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    const { provider } = req.params;
+    if (!['google', 'facebook'].includes(provider)) {
+      throw new ValidationError('Invalid provider');
     }
+    const result = await AuthService.handleSocialLogin(provider, req.query);
+    log.info(`Successful social login for provider: ${provider}, user: ${result.user.email}`);
+    res.json(result);
   }
 
   /**
@@ -42,12 +43,9 @@ export class AuthController {
    * @param {Object} res - Response object
    */
   static async emailSignup(req, res) {
-    try {
-      const result = await AuthService.handleEmailSignup(req.body);
-      res.json(result);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
+    const result = await AuthService.handleEmailSignup(req.body);
+    log.info(`Successful email signup for user: ${result.user.email}`);
+    res.json(result);
   }
 
   /**
@@ -56,11 +54,8 @@ export class AuthController {
    * @param {Object} res - Response object
    */
   static async emailLogin(req, res) {
-    try {
-      const result = await AuthService.handleEmailLogin(req.body);
-      res.json(result);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
+    const result = await AuthService.handleEmailLogin(req.body);
+    log.info(`Successful email login for user: ${result.user.email}`);
+    res.json(result);
   }
 }

@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { User } from '../../schemas/user.schema.js';
+import { AuthenticationError, DatabaseError } from '../../utils/errors.js';
 
 /**
  * Email/Password Authentication Connector
@@ -13,10 +14,9 @@ export class EmailConnector {
    */
   async signup({ email, password, name }) {
     try {
-      console.log(email, password, name, 'email, password, name');
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        throw new Error('User already exists');
+        throw new AuthenticationError('User already exists');
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,7 +36,10 @@ export class EmailConnector {
         provider: 'email',
       };
     } catch (error) {
-      throw new Error(`Email signup failed: ${error.message}`);
+      if (error.name === 'MongoServerError' && error.code === 11000) {
+        throw new AuthenticationError('User already exists');
+      }
+      throw new DatabaseError(`Email signup failed: ${error.message}`);
     }
   }
 
@@ -49,12 +52,12 @@ export class EmailConnector {
     try {
       const user = await User.findOne({ email });
       if (!user) {
-        throw new Error('User not found');
+        throw new AuthenticationError('User not found');
       }
 
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) {
-        throw new Error('Invalid credentials');
+        throw new AuthenticationError('Invalid credentials');
       }
 
       return {
@@ -64,7 +67,10 @@ export class EmailConnector {
         provider: 'email',
       };
     } catch (error) {
-      throw new Error(`Email login failed: ${error.message}`);
+      if (error instanceof AuthenticationError) {
+        throw error;
+      }
+      throw new DatabaseError(`Email login failed: ${error.message}`);
     }
   }
 }

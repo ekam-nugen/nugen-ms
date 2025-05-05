@@ -1,9 +1,13 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/index.js';
+import {
+  JWT_ACCESS_TOKEN_REFRESH_SECRET,
+  JWT_SECRET,
+} from '../config/index.js';
 import superConnector from '../connectors/super.connector.js';
 import { User } from '../schemas/user.schema.js';
 import log from '../config/logger.js';
 import { ValidationError } from '../utils/errors.js';
+import { Token } from '../schemas/token.schema.js';
 
 /**
  * Authentication Service
@@ -23,8 +27,29 @@ export class AuthService {
         provider: user.provider,
       },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: '1d' },
     );
+  }
+
+  /**
+   * Generate refresh token
+   * @param {Object} user - User data
+   * @returns {string} Refresh token
+   */
+  static async generateRefreshToken(user) {
+    const refreshToken = jwt.sign(
+      { sub: user.id },
+      JWT_ACCESS_TOKEN_REFRESH_SECRET,
+      { expiresIn: '7d' },
+    );
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    await Token.create({
+      userId: user.id,
+      token: refreshToken,
+      type: 'refresh',
+      expiresAt,
+    });
+    return refreshToken;
   }
 
   /**
@@ -61,10 +86,15 @@ export class AuthService {
         email: user.email,
         provider: user.provider,
       });
-      return { user: { id: user._id, email: user.email, name: user.name }, token };
+      return {
+        user: { id: user._id, email: user.email, name: user.name },
+        token,
+      };
     } catch (error) {
       if (error.name === 'MongoServerError') {
-        const dbError = new DatabaseError(`Database error during social login: ${error.message}`);
+        const dbError = new DatabaseError(
+          `Database error during social login: ${error.message}`,
+        );
         log.error(dbError.message);
         throw dbError;
       }
@@ -79,11 +109,6 @@ export class AuthService {
    * @returns {Object} User data and token
    */
   static async handleEmailSignup(params) {
-    if (!params.email || !params.password || !params.name) {
-      const error = new ValidationError('Email, password, and name are required');
-      log.error(error.message);
-      throw error;
-    }
     const emailConnector = superConnector.getProvider('email');
     const userData = await emailConnector.signup(params);
     const token = this.generateToken(userData);
@@ -96,14 +121,57 @@ export class AuthService {
    * @returns {Object} User data and token
    */
   static async handleEmailLogin(params) {
-    if (!params.email || !params.password) {
-      const error = new ValidationError('Email and password are required');
-      log.error(error.message);
-      throw error;
-    }
     const emailConnector = superConnector.getProvider('email');
     const userData = await emailConnector.login(params);
     const token = this.generateToken(userData);
-    return { user: userData, token };
+    const refreshToken = await this.generateRefreshToken(userData);
+    return { user: userData, token, refreshToken };
+  }
+
+  /**
+   * Handle Change Password
+   * @param {Object} params - Change password details
+   * @returns {Object} User data
+   */
+  static async handleChangePassword(params) {
+    const emailConnector = superConnector.getProvider('email');
+    const userData = await emailConnector.changePassword(params);
+    return { user: userData };
+  }
+
+  /**
+   * Handle Forgot Password
+   * @param {Object} params - Forgot password details
+   * @returns {Object} Reset link
+   */
+  static async handleForgotPassword(params) {
+    const emailConnector = superConnector.getProvider('email');
+    const resetLink = await emailConnector.forgotPassword(params);
+    return { resetLink };
+  }
+
+  /**
+   * Handle Reset Password
+   * @param {Object} params - Reset password details
+   * @returns {Object} User data
+   */
+  static async handleResetPassword(params) {
+    const emailConnector = superConnector.getProvider('email');
+    const userData = await emailConnector.resetPassword(params);
+    return { user: userData };
+  }
+
+  /**
+   * Handle Reset Password
+   * @param {Object} params - refresh token details
+   * @returns {Object} new token and refresh token
+   */
+  static async refreshToken(refreshToken) {
+    const emailConnector = superConnector.getProvider('email');
+    const userData = await emailConnector.refreshToken(refreshToken);
+    const newAccessToken = generateToken(userData);
+    const newRefreshToken = await generateRefreshToken(userData);
+    await Token.deleteOne({ _id: tokenDoc._id });
+    return { token: newAccessToken, refreshToken: newRefreshToken };
   }
 }

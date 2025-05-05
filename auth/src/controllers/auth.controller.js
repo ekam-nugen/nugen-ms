@@ -33,7 +33,9 @@ export class AuthController {
       throw new ValidationError('Invalid provider');
     }
     const result = await AuthService.handleSocialLogin(provider, req.query);
-    log.info(`Successful social login for provider: ${provider}, user: ${result.user.email}`);
+    log.info(
+      `Successful social login for provider: ${provider}, user: ${result.user.email}`,
+    );
     res.json(result);
   }
 
@@ -57,5 +59,48 @@ export class AuthController {
     const result = await AuthService.handleEmailLogin(req.body);
     log.info(`Successful email login for user: ${result.user.email}`);
     res.json(result);
+  }
+
+  /**
+   * Handle password change
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  static async changePassword(req, res) {
+    const result = await AuthService.handleChangePassword(req.body);
+    log.info(`Successful change password: ${result.user.email}`);
+    res.json({ result: 'Password changed successfully' });
+  }
+
+  /**
+   * Handle forgot password
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  static async forgotPassword(req, res) {
+    const result = await AuthService.handleForgotPassword(req.body);
+    log.info(`Successfully sent forgot password link: ${req.body.email}`);
+    res.json({
+      result: 'Password reset link sent to email',
+      link: result.resetLink,
+    });
+  }
+
+  /**
+   * Handle reset password
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  static async resetPassword(req, res) {
+    const { token } = req.query;
+    if (!token) {
+      throw new ValidationError('Token is required');
+    }
+    const result = await AuthService.handleResetPassword({
+      token,
+      ...req.body,
+    });
+    log.info(`Successfully reset password for user: ${result.user.email}`);
+    res.json({ result: 'Password reset successfully' });
   }
 }

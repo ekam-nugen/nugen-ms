@@ -1,6 +1,7 @@
 import express from 'express';
 import { AuthController } from '../controllers/auth.controller.js';
 import { validateRequest } from '../middleware/validate-request.js';
+import { TokenController } from '../controllers/token.controller.js';
 
 const router = express.Router();
 
@@ -33,6 +34,12 @@ router.post(
   '/reset-password',
   validateRequest('resetPassword'),
   AuthController.resetPassword,
+);
+
+router.post(
+  '/validate',
+  validateRequest('validateToken'),
+  TokenController.validateToken,
 );
 
 export default router;

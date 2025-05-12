@@ -14,7 +14,7 @@ export class EmailConnector {
    * @param {Object} params - User details
    * @returns {Object} User data
    */
-  async signup({ email, password, username }) {
+  async signup({ email, password, firstName, lastName }) {
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -24,7 +24,8 @@ export class EmailConnector {
       const user = new User({
         email,
         password,
-        username,
+        firstName,
+        lastName,
         provider: 'email',
       });
 
@@ -32,7 +33,8 @@ export class EmailConnector {
       return {
         id: user._id,
         email: user.email,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         provider: 'email',
       };
     } catch (error) {
@@ -61,7 +63,8 @@ export class EmailConnector {
       return {
         id: user._id,
         email: user.email,
-        name: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         provider: 'email',
       };
     } catch (error) {
@@ -91,7 +94,8 @@ export class EmailConnector {
       return {
         id: user._id,
         email: user.email,
-        name: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         provider: 'email',
       };
     } catch (error) {
@@ -163,7 +167,8 @@ export class EmailConnector {
       return {
         id: user._id,
         email: user.email,
-        name: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         provider: 'email',
       };
     } catch (error) {

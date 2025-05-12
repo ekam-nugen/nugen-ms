@@ -1,0 +1,88 @@
+export const createOrganizationSchema = {
+  type: 'object',
+  properties: {
+    companyName: { type: 'string', minLength: 1 },
+    mobile: { type: 'string', pattern: '^[0-9]{10}$', nullable: true },
+    industry: { type: 'string', nullable: true },
+    employees: { type: 'number', nullable: true },
+    role: { type: 'string', nullable: true },
+    features: { type: 'array', items: { type: 'string' } },
+    logo: { type: 'string', nullable: true },
+    allowed: { type: 'boolean', nullable: true },
+  },
+  required: ['companyName', 'mobile', 'industry', 'employees', 'role'],
+  additionalProperties: false,
+  errorMessage: {
+    required: {
+      companyName: 'Company name is required',
+      mobile: 'Mobile is required',
+      industry: 'Industry is required',
+      employees: 'Employees count is required',
+      role: 'Role is required',
+    },
+    properties: {
+      companyName: 'Company name is required',
+      mobile: 'Mobile must be a 10-digit number',
+      industry: 'Industry must be a string',
+      employees: 'Employees must be a number',
+      role: 'Role must be a string',
+      features: 'Features must be an array of strings',
+      logo: 'Logo must be a string',
+      allowed: 'Allowed must be a boolean',
+    },
+  },
+};
+
+export const checkOrganizationSchema = {
+  type: 'object',
+  properties: {
+    email: { type: 'string', format: 'email' },
+    mobile: { type: 'string', pattern: '^[0-9]{10}$' },
+  },
+  anyOf: [{ required: ['email'] }, { required: ['mobile'] }],
+  additionalProperties: false,
+  errorMessage: {
+    anyOf: 'Email or mobile is required',
+    properties: {
+      email: 'Invalid email format',
+      mobile: 'Mobile must be a 10-digit number',
+    },
+  },
+};
+
+export const joinOrganizationSchema = {
+  type: 'object',
+  properties: {
+    companyId: { type: 'string' },
+  },
+  required: ['companyId'],
+  additionalProperties: false,
+  errorMessage: {
+    required: 'Company ID is required',
+    properties: {
+      companyId: 'Company ID is required',
+    },
+  },
+};
+
+export const updateOrganizationSchema = {
+  type: 'object',
+  properties: {
+    companyId: { type: 'string' },
+    name: { type: 'string', minLength: 1 },
+    email: { type: 'string', format: 'email' },
+    mobile: { type: 'string', pattern: '^[0-9]{10}$' },
+    address: { type: 'string' },
+  },
+  required: ['companyId'],
+  additionalProperties: false,
+  errorMessage: {
+    required: 'Company ID is required',
+    properties: {
+      companyId: 'Company ID is required',
+      name: 'Name must be non-empty',
+      email: 'Invalid email format',
+      mobile: 'Mobile must be a 10-digit number',
+    },
+  },
+};

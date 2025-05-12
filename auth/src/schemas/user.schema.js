@@ -16,11 +16,16 @@ const userSchema = new mongoose.Schema(
         return this.provider === 'email';
       },
     },
-    username: {
-      type: String,
+    firstName: {
       required: true,
+      type: String,
       trim: true,
-      unique: true,
+      lowercase: true,
+    },
+    lastName: {
+      required: true,
+      type: String,
+      trim: true,
       lowercase: true,
     },
     provider: {

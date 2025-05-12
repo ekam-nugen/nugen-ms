@@ -22,8 +22,10 @@ export class AuthService {
   static generateToken(user) {
     return jwt.sign(
       {
-        id: user.id,
+        userId: user.id,
         email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         provider: user.provider,
       },
       JWT_SECRET,

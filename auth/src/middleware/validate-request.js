@@ -11,6 +11,7 @@ import {
   verifyOtpSchema,
   refreshTokenSchema,
 } from '../validations/index.js';
+import { validateTokenSchema } from '../validations/schemas.js';
 
 // Initialize AJV with custom settings
 const ajv = new Ajv({ allErrors: true, verbose: true });
@@ -25,6 +26,7 @@ const validateResetPassword = ajv.compile(resetPasswordSchema);
 const validateLoginWithOtp = ajv.compile(loginWithOtpSchema);
 const validateVerifyOtp = ajv.compile(verifyOtpSchema);
 const validateRefreshToken = ajv.compile(refreshTokenSchema);
+const validateToken = ajv.compile(validateTokenSchema);
 
 /**
  * Validate request body using AJV
@@ -57,6 +59,9 @@ export const validateRequest = (type) => {
       break;
     case 'refreshToken':
       validator = validateRefreshToken;
+      break;
+    case 'validateToken':
+      validator = validateToken;
       break;
   }
 

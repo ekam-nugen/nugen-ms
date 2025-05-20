@@ -24,7 +24,7 @@ export const checkOrganization = async (req, res) => {
     log.info(`Organization: ${organization.email} by user: ${req.body.email}`);
     return sendResponse(res, {
       data: organization || { exists: false },
-      message: `Organization checked: ${req.body.email || req.body.mobile}`,
+      message: `Organization checked: ${req.body.mobile || req.body.email}`,
     });
   } catch (err) {
     log.error(`Check organization error: ${err.message}`);
@@ -48,5 +48,40 @@ export const listOrganizations = async (req, res) => {
     return sendResponse(res, {
       error: err,
     });
+  }
+};
+
+export const updateOrganization = async (req, res) => {
+  try {
+    let { userId, ...details } = req.body;
+    const updatedOrganization = await orgService.updateOrganization(
+      userId,
+      details,
+    );
+    if (updatedOrganization.acknowledged) {
+      return sendResponse(res, {
+        message: `Organization updated: ${details.companyName}`,
+      });
+    } else {
+      return sendResponse(res, {
+        message: `Organization not updated: ${details.companyName}`,
+        statusCode: 400,
+      });
+    }
+  } catch (err) {
+    return sendResponse(res, { error: err });
+  }
+};
+
+export const joinOrganization = async (req, res) => {
+  try {
+    let { userId, ...details } = req.body;
+    const result = await orgService.joinOrganization(userId, details.companyId);
+    return sendResponse(res, {
+      data: result,
+      message: `User ${req.body.email} joined organization: ${result.companyName}`,
+    });
+  } catch (err) {
+    return sendResponse(res, { error: err });
   }
 };

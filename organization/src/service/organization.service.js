@@ -1,5 +1,10 @@
+import mongoose from 'mongoose';
 import { Organization, UserOrganization } from '../schemas/index.js';
-import { ValidationError } from '../utils/errors.js';
+import {
+  AuthenticationError,
+  TransactionError,
+  ValidationError,
+} from '../utils/errors.js';
 
 export const createOrganization = async (
   userId,
@@ -38,110 +43,152 @@ export const createOrganization = async (
     );
   }
 
-  const session = await Organization.startSession();
+  const session = await mongoose.startSession();
   try {
-    let organization;
-    await session.withTransaction(async () => {
-      organization = new Organization({
-        companyName,
-        email,
-        mobile,
-        industry,
-        features,
-        logo,
-        role,
-        employees,
-      });
-      await organization.save({ session });
+    session.startTransaction();
 
-      const userOrg = new UserOrganization({
-        userId,
-        orgId: organization._id,
-        role: 'admin',
-      });
-      await userOrg.save({ session });
+    const organization = new Organization({
+      companyName,
+      email,
+      mobile,
+      industry,
+      employees,
+      features,
+      logo,
+      role,
     });
+    await organization.save({ session });
+
+    const userOrg = new UserOrganization({
+      userId,
+      companyId: organization._id,
+      role: 'admin',
+    });
+    await userOrg.save({ session });
+
+    await session.commitTransaction();
 
     return {
       id: organization._id,
-      companyName: organization.companyName,
+      name: organization.name,
       email: organization.email,
       mobile: organization.mobile,
-      role: organization.role,
-      industry: organization.industry,
-      employees: organization.employees,
-      features: organization.features,
-      logo: organization.logo,
+      address: organization.address,
+      role: 'admin',
     };
-  } catch (error) {
-    throw error;
+  } catch (err) {
+    await session.abortTransaction();
+    if (err.type && err.statusCode) {
+      throw err; // Re-throw validation or custom errors
+    }
+    throw new TransactionError(
+      'Transaction failed while creating organization',
+    );
   } finally {
-    await session.endSession();
+    session.endSession();
   }
-
-  //   const organization = new Organization({
-  //     companyName,
-  //     email,
-  //     mobile,
-  //     industry,
-  //     features,
-  //     logo,
-  //     role,
-  //     employees,
-  //   });
-  //   await organization.save();
-
-  //   const userOrg = new UserOrganization({
-  //     userId,
-  //     companyId: organization._id,
-  //     role: 'admin',
-  //   });
-  //   await userOrg.save();
-
-  //   return {
-  //     id: organization._id,
-  //     companyName: organization.companyName,
-  //     email: organization.email,
-  //     mobile: organization.mobile,
-  //     role: organization.role,
-  //     industry: organization.industry,
-  //     employees: organization.employees,
-  //     features: organization.features,
-  //     logo: organization.logo,
-  //   };
 };
 
 export const checkOrganization = async ({ email, mobile }) => {
   const query = {};
-  if (email) query.email = { $regex: new RegExp(`^${email}$`, 'i') };
   if (mobile) query.mobile = mobile;
+  else if (email) query.email = { $regex: new RegExp(`^${email}$`, 'i') };
   if (!email && !mobile) {
-    throw {
-      type: 'Validation Error',
-      message: 'Email or mobile is required',
-      statusCode: 400,
-    };
+    throw new ValidationError(
+      'Email or mobile is required to check organization',
+    );
   }
   const organization = await Organization.findOne(query);
   if (!organization) return null;
   return {
-    id: organization._id,
-    name: organization.name,
+    companyName: organization.companyName,
     email: organization.email,
     mobile: organization.mobile,
-    address: organization.address,
     exists: true,
   };
 };
 
 export const listOrganizations = async (userId) => {
-  const userOrgs = await UserOrganization.find({ userId }).populate('orgId');
+  const userOrgs = await UserOrganization.find({ userId }).populate(
+    'companyId',
+  );
   return userOrgs.map((uo) => ({
-    id: uo.id,
-    name: uo.name,
-    email: uo.email,
-    mobile: uo.mobile,
-    address: uo.address,
-    role: uo.role,
+    userId: uo._id,
+    companyId: uo.companyId._id,
+    companyName: uo.companyId.companyName,
+    companyLogo: uo.companyId.logo,
+    companyIndustry: uo.companyId.industry,
+    companyEmployees: uo.companyId.employees,
+    companyFeatures: uo.companyId.features,
+    companyAddress: uo.companyId.address,
+    companyCreatedAt: uo.companyId.createdAt,
+    companyUpdatedAt: uo.companyId.updatedAt,
   }));
+};
+
+export const updateOrganization = async (
+  userId,
+  {
+    companyId,
+    companyName,
+    email,
+    mobile,
+    industry,
+    employees,
+    features,
+    logo,
+  },
+) => {
+  const userOrg = await UserOrganization.findOne({ userId, companyId });
+  if (!userOrg) {
+    throw new ValidationError(
+      'User is not part of this organization or does not exist',
+    );
+  }
+  if (userOrg.role !== 'admin') {
+    throw new AuthenticationError(
+      'User does not have permission to update this organization',
+    );
+  }
+  const organization = await Organization.findById(companyId);
+  if (!organization) {
+    throw new ValidationError('Organization not found or does not exist');
+  }
+  const updatedOrganization = await Organization.updateOne(
+    { _id: companyId },
+    {
+      $set: {
+        companyName,
+        email,
+        mobile,
+        industry,
+        employees,
+        features,
+        logo,
+      },
+    },
+  );
+  return {
+    ...updatedOrganization,
+  };
+};
+
+export const joinOrganization = async (userId, companyId) => {
+  const organization = await Organization.findById(companyId);
+  if (!organization) {
+    throw new ValidationError('Organization not found or does not exist');
+  }
+  const existingUserOrg = await UserOrganization.findOne({ userId, companyId });
+  if (existingUserOrg) {
+    throw new ValidationError(
+      `User is already part of the organization ${organization.companyName}`,
+    );
+  }
+  const userOrg = new UserOrganization({ userId, companyId, role: 'member' });
+  await userOrg.save();
+  return {
+    id: organization._id,
+    companyName: organization.companyName,
+    role: 'member',
+  };
 };

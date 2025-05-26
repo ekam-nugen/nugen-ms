@@ -49,6 +49,8 @@ export class GoogleConnector {
         email: payload.email,
         name: payload.name,
         provider: 'google',
+        familyName: payload.family_name,
+        givenName: payload.given_name,
       };
     } catch (error) {
       throw new Error(`Google authentication failed: ${error.message}`);

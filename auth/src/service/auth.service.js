@@ -73,8 +73,8 @@ export class AuthService {
       if (!user) {
         user = new User({
           email: userData.email,
-          firstName: userData.name,
-          lastName: userData.name,
+          firstName: userData.givenName,
+          lastName: userData.familyName ? userData.familyName : userData.name,
           // name: userData.name,
           provider,
           providerId: userData.id,

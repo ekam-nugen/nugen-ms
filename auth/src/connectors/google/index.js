@@ -1,5 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI } from '../../config/index.js';
+import {
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI,
+} from '../../config/index.js';
 
 /**
  * Google Authentication Connector
@@ -10,7 +14,7 @@ export class GoogleConnector {
     this.client = new OAuth2Client(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      GOOGLE_REDIRECT_URI
+      GOOGLE_REDIRECT_URI,
     );
   }
 
@@ -36,7 +40,7 @@ export class GoogleConnector {
 
       const ticket = await this.client.verifyIdToken({
         idToken: tokens.id_token,
-        audience: config.google.clientId,
+        audience: GOOGLE_CLIENT_ID,
       });
 
       const payload = ticket.getPayload();
@@ -45,6 +49,8 @@ export class GoogleConnector {
         email: payload.email,
         name: payload.name,
         provider: 'google',
+        familyName: payload.family_name,
+        givenName: payload.given_name,
       };
     } catch (error) {
       throw new Error(`Google authentication failed: ${error.message}`);

@@ -75,11 +75,26 @@ export const updateOrganization = async (req, res) => {
 
 export const joinOrganization = async (req, res) => {
   try {
-    let { userId, ...details } = req.body;
-    const result = await orgService.joinOrganization(userId, details.companyId);
+    let { email, password, firstName, lastName } = req.body;
+    if (!email || !password) {
+      return sendResponse(res, {
+        error: {
+          type: 'Validation Error',
+          message: 'Email and password are required',
+          statusCode: 400,
+        },
+      });
+    }
+    const result = await orgService.joinOrganization(req.params.token, {
+      email,
+      password,
+      firstName,
+      lastName,
+    });
     return sendResponse(res, {
       data: result,
-      message: `User ${req.body.email} joined organization: ${result.companyName}`,
+      message: `User joined organization: ${result.id}`,
+      statusCode: 200,
     });
   } catch (err) {
     return sendResponse(res, { error: err });

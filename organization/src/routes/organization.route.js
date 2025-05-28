@@ -30,11 +30,6 @@ router.put(
   authenticateToken,
   updateOrganization,
 );
-router.post(
-  '/join',
-  validateRequest('joinOrganization'),
-  authenticateToken,
-  joinOrganization,
-);
+router.post('/join/:token', joinOrganization);
 
 export default router;

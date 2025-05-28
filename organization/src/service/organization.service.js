@@ -1,10 +1,16 @@
 import mongoose from 'mongoose';
-import { Organization, UserOrganization } from '../schemas/index.js';
+import {
+  Invitation,
+  Organization,
+  UserOrganization,
+} from '../schemas/index.js';
 import {
   AuthenticationError,
   TransactionError,
   ValidationError,
 } from '../utils/errors.js';
+import axios from 'axios';
+import sendResponse from '../utils/response.handler.js';
 
 export const createOrganization = async (
   userId,
@@ -173,22 +179,66 @@ export const updateOrganization = async (
   };
 };
 
-export const joinOrganization = async (userId, companyId) => {
-  const organization = await Organization.findById(companyId);
+export const joinOrganization = async (
+  token,
+  { email, password, firstName, lastName },
+) => {
+  const invitation = await Invitation.findOne({ token, status: 'pending' });
+  if (!invitation) {
+    throw {
+      type: 'Validation Error',
+      message: 'Invalid or expired invitation token',
+      statusCode: 400,
+    };
+  }
+  if (invitation.expiresAt < new Date()) {
+    invitation.status = 'expired';
+    await invitation.save();
+    throw {
+      type: 'Validation Error',
+      message: 'Invitation has expired',
+      statusCode: 400,
+    };
+  }
+  if (invitation.email.toLowerCase() !== email.toLowerCase()) {
+    throw {
+      type: 'Authorization Error',
+      message: 'Email does not match invitation',
+      statusCode: 403,
+    };
+  }
+
+  const organization = await Organization.findById(invitation.companyId);
   if (!organization) {
-    throw new ValidationError('Organization not found or does not exist');
+    throw {
+      type: 'Validation Error',
+      message: 'Organization not found',
+      statusCode: 404,
+    };
   }
-  const existingUserOrg = await UserOrganization.findOne({ userId, companyId });
-  if (existingUserOrg) {
-    throw new ValidationError(
-      `User is already part of the organization ${organization.companyName}`,
-    );
+
+  // Sign up user via Authentication Microservice
+  let userId;
+  try {
+    const response = await axios.post('http://localhost:8000/email/signup', {
+      email,
+      password,
+      firstName,
+      lastName,
+    });
+    if (response.data) {
+      sendResponse({
+        data: response.data,
+        message: 'Joining organization successful',
+        statusCode: 201,
+      });
+    }
+    console.log('User signed up successfully:', response.data);
+  } catch (err) {
+    throw {
+      type: 'Validation Error',
+      message: `Signup failed: ${err.response?.data?.errors?.message || err.message}`,
+      statusCode: err.response?.status || 400,
+    };
   }
-  const userOrg = new UserOrganization({ userId, companyId, role: 'member' });
-  await userOrg.save();
-  return {
-    id: organization._id,
-    companyName: organization.companyName,
-    role: 'member',
-  };
 };

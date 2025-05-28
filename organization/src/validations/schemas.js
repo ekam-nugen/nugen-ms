@@ -93,3 +93,27 @@ export const updateOrganizationSchema = {
     },
   },
 };
+
+export const createInvitationSchema = {
+  type: 'object',
+  properties: {
+    email: { type: 'string', format: 'email' },
+    mobile: { type: 'string', pattern: '^[0-9]{10}$' },
+    companyId: { type: 'string' },
+    deliveryMethod: {
+      type: 'string',
+      enum: ['email', 'sms'],
+    },
+  },
+  anyOf: [{ required: ['email'] }, { required: ['mobile'] }],
+  additionalProperties: false,
+  errorMessage: {
+    anyOf: 'Email or mobile is required',
+    properties: {
+      email: 'Invalid email format',
+      mobile: 'Mobile must be a 10-digit number',
+      companyId: 'Company ID is required',
+      deliveryMethod: 'Delivery method must be either email or sms',
+    },
+  },
+};

@@ -7,6 +7,7 @@ import {
   joinOrganizationSchema,
   updateOrganizationSchema,
 } from '../validations/index.js';
+import { createInvitationSchema } from '../validations/schemas.js';
 
 const ajv = new Ajv({ allErrors: true, verbose: true });
 addFormats(ajv);
@@ -16,6 +17,7 @@ const validateCreateOrganization = ajv.compile(createOrganizationSchema);
 const validateCheckOrganization = ajv.compile(checkOrganizationSchema);
 const validateJoinOrganization = ajv.compile(joinOrganizationSchema);
 const validateUpdateOrganization = ajv.compile(updateOrganizationSchema);
+const validateCreateInvitation = ajv.compile(createInvitationSchema);
 
 /**
  * Validate request body using AJV
@@ -37,6 +39,8 @@ export const validateRequest = (type) => {
     case 'updateOrganization':
       validator = validateUpdateOrganization;
       break;
+    case 'createInvitation':
+      validator = validateCreateInvitation;
   }
 
   return (req, res, next) => {

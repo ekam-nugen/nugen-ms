@@ -1,0 +1,326 @@
+{
+    "FirstStepContent": [
+        {
+            "type": "input",
+            "placeholder": "Company name",
+            "label": "What’s your company name?"
+        },
+        {
+            "type": "input",
+            "placeholder": "Job title",
+            "label": "What’s your role in the company?"
+        }
+    ],
+    "SecondStepContent": [
+        {
+            "label": "How many employees do you have?",
+            "options": [
+                {
+                    "label": "1-10"
+                },
+                {
+                    "label": "11-30"
+                },
+                {
+                    "label": "31-50"
+                },
+                {
+                    "label": "51-100"
+                },
+                {
+                    "label": "101-200"
+                },
+                {
+                    "label": "201-500"
+                },
+                {
+                    "label": "501-1000"
+                },
+                {
+                    "label": "1000+"
+                }
+            ]
+        },
+        {
+            "label": "What is your business industry?",
+            "options": [
+                {
+                    "label": "Construction",
+                    "icon": "FaBuilding",
+                    "subIndustries": [
+                        "Commercial",
+                        "Heavy Civil",
+                        "Industrial",
+                        "Residential",
+                        "Specialty Trades",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Healthcare",
+                    "icon": "FaHeartbeat",
+                    "subIndustries": [
+                        "Ambulatory",
+                        "Assisted Living",
+                        "Home Care",
+                        "Hospitals",
+                        "Social Care",
+                        "Staffing",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Food & Beverage",
+                    "icon": "FaUtensils",
+                    "subIndustries": [
+                        "Bars",
+                        "Caterers",
+                        "Restaurants",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Retail",
+                    "icon": "FaShoppingBag",
+                    "subIndustries": [
+                        "Apparel",
+                        "Home Goods",
+                        "Sporting Goods",
+                        "Super Market",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Cleaning",
+                    "icon": "FaBroom",
+                    "subIndustries": [
+                        "Commercial",
+                        "Residential",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Manufacturing",
+                    "icon": "FaIndustry",
+                    "subIndustries": [
+                        "Food & Beverages",
+                        "Machinery",
+                        "Metal Products",
+                        "Plastics and Chemicals",
+                        "Printing",
+                        "Textile and Leather",
+                        "Miscellaneous",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Security",
+                    "icon": "FaShieldAlt",
+                    "subIndustries": []
+                },
+                {
+                    "label": "Accommodation",
+                    "icon": "FaHotel",
+                    "subIndustries": [
+                        "Air BnB",
+                        "B&B Inns",
+                        "Casino-Hotels",
+                        "Hotels",
+                        "Parks & Campgrounds",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Staffing",
+                    "icon": "FaUserGroup",
+                    "subIndustries": [
+                        "Healthcare",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Transportation",
+                    "icon": "FaTruck",
+                    "subIndustries": [
+                        "Logistics",
+                        "Truck Transportation",
+                        "Transit",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Entertainment & Recreation",
+                    "icon": "FaMusic",
+                    "subIndustries": [
+                        "Live Entertainment",
+                        "Museums & Monuments",
+                        "Recreation & Amusement",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Real Estate",
+                    "icon": "FaHome",
+                    "subIndustries": [
+                        "Licensing",
+                        "Real Estate",
+                        "Rental Services",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Government",
+                    "icon": "FaUniversity",
+                    "subIndustries": [
+                        "Economic Management",
+                        "Government Administration",
+                        "Human Resource Management",
+                        "Public Safety",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Education",
+                    "icon": "FaBook",
+                    "subIndustries": [
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Information",
+                    "icon": "FaInfoCircle",
+                    "subIndustries": [
+                        "Information Services",
+                        "Telecommunication",
+                        "Media",
+                        "Publishing",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Warehousing",
+                    "icon": "FaWarehouse",
+                    "subIndustries": [
+                        "Warehousing",
+                        "Storage",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Finance",
+                    "icon": "FaMoneyBillWave",
+                    "subIndustries": [
+                        "Monetary Authority",
+                        "Commercial Banking",
+                        "Financial Services",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Insurance",
+                    "icon": "FaClipboardCheck",
+                    "subIndustries": [
+                        "Agencies & Brokerages",
+                        "Funds & Trusts",
+                        "Insurance Carriers",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Personal Services",
+                    "icon": "FaHandsHelping",
+                    "subIndustries": [
+                        "Household",
+                        "Personal Care",
+                        "Religious",
+                        "Repair and Maintenance",
+                        "Social",
+                        "Other"
+                    ]
+                },
+                {
+                    "label": "Other",
+                    "subIndustries": []
+                }
+            ]
+        }
+    ],
+    "StepThreeFeaturesContent": [
+        {
+            "category": "Operations",
+            "features": [
+                {
+                    "label": "Time clock",
+                    "icon": "⏱️"
+                },
+                {
+                    "label": "Schedule",
+                    "icon": "📅"
+                },
+                {
+                    "label": "Forms & Checklists",
+                    "icon": "📋"
+                },
+                {
+                    "label": "Task management",
+                    "icon": "🗓️"
+                }
+            ]
+        },
+        {
+            "category": "Communication",
+            "features": [
+                {
+                    "label": "Chat & Updates",
+                    "icon": "💬"
+                },
+                {
+                    "label": "Directory",
+                    "icon": "📇"
+                },
+                {
+                    "label": "Events",
+                    "icon": "📆"
+                },
+                {
+                    "label": "Knowledge base",
+                    "icon": "📚"
+                }
+            ]
+        },
+        {
+            "category": "HR & Skills",
+            "features": [
+                {
+                    "label": "Time off management",
+                    "icon": "🌤️"
+                },
+                {
+                    "label": "Training & Onboarding",
+                    "icon": "📖"
+                },
+                {
+                    "label": "Document management",
+                    "icon": "📁"
+                },
+                {
+                    "label": "Recognitions & Rewards",
+                    "icon": "🎁"
+                }
+            ]
+        }
+    ],
+    "LogoUploadStepContent": {
+        "title": "Make it your own",
+        "subtitle": "Insert your logo",
+        "uploadPrompt": "Drag your logo here",
+        "browseText": "Browse",
+        "note": "Change from the settings menu at any time"
+    },
+    "PhoneNumberStepContent": {
+        "title": "What's your mobile number?",
+        "subtitle": "Log in to your app easily and securely with your mobile phone number",
+        "helperText": "We'll text you the link to download your mobile app",
+        "icon": "MdPhoneIphone"
+    }
+}

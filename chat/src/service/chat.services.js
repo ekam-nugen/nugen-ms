@@ -117,12 +117,12 @@ export class ChatServices {
             },
           },
         ],
-        as: 'reciverUserInfo',
+        as: 'receiverUserInfo',
       },
     });
     pipeline.push({
       $unwind: {
-        path: '$reciverUserInfo',
+        path: '$receiverUserInfo',
         preserveNullAndEmptyArrays: false,
       },
     });

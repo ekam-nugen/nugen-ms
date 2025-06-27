@@ -19,13 +19,13 @@ const chatThreadSchema = new mongoose.Schema(
       enum: ['text', 'image', 'file', 'audio', 'video'],
       default: 'text',
     },
-    isArchive: {
-      type: Boolean,
-      default: false,
+    archiveTheradUserId: {
+      type: [mongoose.Types.ObjectId],
+      default: [],
     },
-    isMute: {
-      type: Boolean,
-      default: false,
+    muteTheradUserId: {
+      type: [mongoose.Types.ObjectId],
+      default: [],
     },
     isActive: {
       type: Boolean,

@@ -135,50 +135,6 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // Archive message
-    socket.on('archiveMessage', async ({ messageId }) => {
-      try {
-        const message = await Message.findById(messageId);
-        if (!message) {
-          socket.emit('error', { message: 'Message not found' });
-          return;
-        }
-
-        message.isArchive = true;
-        await message.save();
-
-        const chatroomId = message.groupChat
-          ? message.receiverId[0]
-          : [message.senderId, ...message.receiverId].sort().join('_');
-        io.to(chatroomId).emit('messageArchived', { messageId });
-      } catch (error) {
-        console.error('Error archiving message:', error);
-        socket.emit('error', { message: 'Failed to archive message' });
-      }
-    });
-
-    // Mute chat
-    socket.on('muteChat', async ({ messageId }) => {
-      try {
-        const message = await Message.findById(messageId);
-        if (!message) {
-          socket.emit('error', { message: 'Message not found' });
-          return;
-        }
-
-        message.isMute = true;
-        await message.save();
-
-        const chatroomId = message.groupChat
-          ? message.receiverId[0]
-          : [message.senderId, ...message.receiverId].sort().join('_');
-        io.to(chatroomId).emit('chatMuted', { messageId });
-      } catch (error) {
-        console.error('Error muting chat:', error);
-        socket.emit('error', { message: 'Failed to mute chat' });
-      }
-    });
-
     // Delete message (soft delete)
     socket.on('deleteMessage', async ({ messageId }) => {
       try {

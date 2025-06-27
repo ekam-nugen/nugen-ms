@@ -59,4 +59,21 @@ export class ChatController {
     log.info(`Chat thread created successfully`);
     res.json({ data: chatThread });
   }
+
+  //archive chat thread
+  /**
+   * Archive chat thread
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  static async archiveChatThread(req, res) {
+    const { chatThreadId } = req.params;
+    const { userId } = req.user;
+    const chatThread = await ChatServices.archiveChatThread(
+      chatThreadId,
+      userId,
+    );
+    log.info(`Chat thread archived successfully`);
+    res.json({ data: chatThread });
+  }
 }

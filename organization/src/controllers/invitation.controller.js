@@ -2,7 +2,7 @@ import * as invitationService from '../service/invitation.service.js';
 import sendResponse from '../utils/response.handler.js';
 
 export const createInvitation = async (req, res) => {
-  const { email, deliveryMethod } = req.body;
+  const { email, deliveryMethod, companyId } = req.body;
   if (!email || !deliveryMethod) {
     return sendResponse(res, {
       error: {
@@ -14,8 +14,9 @@ export const createInvitation = async (req, res) => {
   }
   try {
     const invitation = await invitationService.createInvitation(
-      req.body.userId,
-      req.body.companyId,
+      req.user.userId,
+      // req.body.companyId,
+      companyId,
       {
         email,
         deliveryMethod,

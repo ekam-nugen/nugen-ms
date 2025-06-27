@@ -4,8 +4,13 @@ import sendResponse from '../utils/response.handler.js';
 
 export const createOrganization = async (req, res) => {
   try {
-    let { userId, ...details } = req.body;
-    const organization = await orgService.createOrganization(userId, details);
+    let { userId, email } = req.user;
+    let { ...details } = req.body;
+    const organization = await orgService.createOrganization(
+      userId,
+      email,
+      details,
+    );
     log.info(`Organization created: ${details.email}`);
     return sendResponse(res, {
       data: organization,
@@ -20,11 +25,14 @@ export const createOrganization = async (req, res) => {
 
 export const checkOrganization = async (req, res) => {
   try {
-    const organization = await orgService.checkOrganization(req.body);
-    log.info(`Organization: ${organization.email} by user: ${req.body.email}`);
+    const { email, mobile } = req.body;
+    const organization = await orgService.checkOrganization({ email, mobile });
+    log.info(
+      `Organization: ${req.user.mobile || req.user.email} by user: ${req.user.email}`,
+    );
     return sendResponse(res, {
       data: organization || { exists: false },
-      message: `Organization checked: ${req.body.mobile || req.body.email}`,
+      message: `Organization checked: ${req.user.mobile || req.user.email}`,
     });
   } catch (err) {
     log.error(`Check organization error: ${err.message}`);
@@ -34,10 +42,10 @@ export const checkOrganization = async (req, res) => {
 
 export const listOrganizations = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.user;
     const organizations = await orgService.listOrganizations(userId);
     log.info(
-      `Organizations listed for user: ${req.body.email || req.body.mobile}`,
+      `Organizations listed for user: ${req.user.email || req.user.mobile}`,
     );
     return sendResponse(res, {
       data: organizations,
@@ -53,7 +61,8 @@ export const listOrganizations = async (req, res) => {
 
 export const updateOrganization = async (req, res) => {
   try {
-    let { userId, ...details } = req.body;
+    let { userId } = req.user;
+    let { ...details } = req.body;
     const updatedOrganization = await orgService.updateOrganization(
       userId,
       details,

@@ -14,9 +14,9 @@ import sendResponse from '../utils/response.handler.js';
 
 export const createOrganization = async (
   userId,
+  email,
   {
     companyName,
-    email,
     mobile,
     industry,
     employees = 1,

@@ -131,7 +131,7 @@ export class ChatServices {
         updatedAt: -1,
       },
     });
-    console.log(JSON.stringify(pipeline));
+    //console.log(JSON.stringify(pipeline));
     const chatThreads = await ChatThread.aggregate(pipeline);
     return chatThreads;
   }

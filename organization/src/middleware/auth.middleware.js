@@ -17,11 +17,11 @@ export const authenticateToken = async (req, res, next) => {
       accessToken: token,
     });
     if (response.data.valid) {
-      req.body = {
+      req.user = {
         ...response.data.payload,
         ...req.body,
       };
-      log.info(`Token validated for user: ${req.body.email}`);
+      log.info(`Token validated for user: ${req.user.email}`);
       next();
     } else {
       log.error('Token validation failed');

@@ -12,7 +12,7 @@ export class UserController {
    * @param {Object} res - Response object
    */
   static async getAllUserList(req, res) {
-    const { userId } = req.body;
+    const { userId } = req.user;
     const userInfo = await UserService.getUserData(userId);
     log.info(`Get user data`);
     res.json({ data: userInfo });

@@ -37,7 +37,8 @@ export class ChatController {
    */
   static async getUserChatThreads(req, res) {
     const { userId } = req.user;
-    const chatThreads = await ChatServices.getChatThreads(userId);
+    const { archived } = req.query;
+    const chatThreads = await ChatServices.getChatThreads(userId, archived);
     log.info(`Get chat threads`);
     res.json({ data: chatThreads });
   }
@@ -74,6 +75,9 @@ export class ChatController {
       userId,
     );
     log.info(`Chat thread archived successfully`);
-    res.json({ data: chatThread });
+    res.json({
+      message: 'Chat thread archived successfully',
+      data: chatThread,
+    });
   }
 }

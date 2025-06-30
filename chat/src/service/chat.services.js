@@ -1,5 +1,4 @@
 import { User } from '../schema/user.schema.js';
-import { makeRequest } from '../middleware/axios.js';
 import { ChatThread } from '../schema/chatThread.schema.js';
 import { Types } from 'mongoose';
 import { Message } from '../schema/chat.schema.js';
@@ -76,6 +75,7 @@ export class ChatServices {
         ],
       },
     });
+
     pipeline.push({
       $lookup: {
         from: 'users',
@@ -95,12 +95,80 @@ export class ChatServices {
         as: 'senderUserInfo',
       },
     });
+
     pipeline.push({
       $unwind: {
         path: '$senderUserInfo',
         preserveNullAndEmptyArrays: false,
       },
     });
+
+    pipeline.push(
+      {
+        $unwind: {
+          path: '$archiveByUserId',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          chatArchived: {
+            $cond: [
+              {
+                $eq: ['$archiveByUserId', new Types.ObjectId(userId)],
+              },
+              true,
+              false,
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          senderId: {
+            $first: '$senderId',
+          },
+          receiverId: {
+            $first: '$receiverId',
+          },
+          messageType: {
+            $first: '$messageType',
+          },
+          isActive: {
+            $first: '$isActive',
+          },
+          isDeleted: {
+            $first: '$isDeleted',
+          },
+          lastMessage: {
+            $first: '$lastMessage',
+          },
+          isArchived: {
+            $push: '$chatArchived',
+          },
+        },
+      },
+      {
+        $addFields: {
+          isArchive: {
+            $anyElementTrue: '$isArchived',
+          },
+        },
+      },
+      {
+        $match: {
+          isArchive: false,
+        },
+      },
+      {
+        $project: {
+          isArchived: 0,
+          isArchive: 0,
+        },
+      },
+    );
+
     pipeline.push({
       $lookup: {
         from: 'users',
@@ -120,18 +188,21 @@ export class ChatServices {
         as: 'receiverUserInfo',
       },
     });
+
     pipeline.push({
       $unwind: {
         path: '$receiverUserInfo',
         preserveNullAndEmptyArrays: false,
       },
     });
+
     pipeline.push({
       $sort: {
         updatedAt: -1,
       },
     });
-    //console.log(JSON.stringify(pipeline));
+
+    // console.log(JSON.stringify(pipeline));
     const chatThreads = await ChatThread.aggregate(pipeline);
     return chatThreads;
   }
@@ -158,5 +229,28 @@ export class ChatServices {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  static async archiveChatThread(chatThreadId, userId) {
+    // Check if the chat thread exists
+    const chatThreadInfo = await ChatThread.findById(chatThreadId);
+    if (!chatThread) {
+      throw new Error('Chat thread not found');
+    }
+
+    const isUserAlreadyArchived =
+      chatThreadInfo.archiveTheradUserId.includes(userId);
+    if (isUserAlreadyArchived) {
+      throw new Error('User already archived this chat thread');
+    }
+
+    const chatThread = await ChatThread.findByIdAndUpdate(
+      chatThreadId,
+      {
+        $addToSet: { archiveTheradUserId: userId },
+      },
+      { new: true },
+    );
+    return chatThread;
   }
 }

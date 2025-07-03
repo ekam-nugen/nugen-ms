@@ -14,4 +14,8 @@ router
   .get(authMiddleware, ChatController.getUserChatThreads)
   .post(authMiddleware, ChatController.createChatThread);
 
+router
+  .route('/chat-thread/archive/:chatThreadId')
+  .get(authMiddleware, ChatController.archiveChatThread);
+
 export default router;

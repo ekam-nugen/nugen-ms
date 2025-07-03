@@ -55,12 +55,12 @@ export class ChatServices {
         updatedAt: -1,
       },
     });
-    console.log(JSON.stringify(pipeline));
+    // console.log(JSON.stringify(pipeline));
     const chatThread = await Message.aggregate(pipeline);
     return chatThread;
   }
 
-  static async getChatThreads(userId) {
+  static async getChatThreads(userId, archived = false) {
     const pipeline = [];
 
     pipeline.push({
@@ -106,7 +106,7 @@ export class ChatServices {
     pipeline.push(
       {
         $unwind: {
-          path: '$archiveByUserId',
+          path: '$archiveTheradUserId',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -115,7 +115,7 @@ export class ChatServices {
           chatArchived: {
             $cond: [
               {
-                $eq: ['$archiveByUserId', new Types.ObjectId(userId)],
+                $eq: ['$archiveTheradUserId', new Types.ObjectId(userId)],
               },
               true,
               false,
@@ -156,18 +156,28 @@ export class ChatServices {
           },
         },
       },
-      {
+    );
+
+    if (archived) {
+      pipeline.push({
+        $match: {
+          isArchive: true,
+        },
+      });
+    } else {
+      pipeline.push({
         $match: {
           isArchive: false,
         },
+      });
+    }
+
+    pipeline.push({
+      $project: {
+        isArchived: 0,
+        isArchive: 0,
       },
-      {
-        $project: {
-          isArchived: 0,
-          isArchive: 0,
-        },
-      },
-    );
+    });
 
     pipeline.push({
       $lookup: {
@@ -234,14 +244,22 @@ export class ChatServices {
   static async archiveChatThread(chatThreadId, userId) {
     // Check if the chat thread exists
     const chatThreadInfo = await ChatThread.findById(chatThreadId);
-    if (!chatThread) {
+    if (!chatThreadInfo) {
       throw new Error('Chat thread not found');
     }
 
     const isUserAlreadyArchived =
       chatThreadInfo.archiveTheradUserId.includes(userId);
     if (isUserAlreadyArchived) {
-      throw new Error('User already archived this chat thread');
+      // remove user from archiveTheradUserId
+      const chatThread = await ChatThread.findByIdAndUpdate(
+        chatThreadId,
+        {
+          $pull: { archiveTheradUserId: userId },
+        },
+        { new: true },
+      );
+      return chatThread;
     }
 
     const chatThread = await ChatThread.findByIdAndUpdate(

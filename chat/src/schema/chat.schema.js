@@ -17,14 +17,19 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    messageStatus: {
+      type: String,
+      enum: ['sent', 'delivered', 'read'],
+      default: 'sent',
+    },
     messageType: {
       type: String,
       enum: ['text', 'image', 'file', 'audio', 'video'],
       default: 'text',
     },
-    // messageReaction: {
-    //   type: String,
-    // },
+    messageReaction: {
+      type: String,
+    },
     url: {
       type: String,
     },

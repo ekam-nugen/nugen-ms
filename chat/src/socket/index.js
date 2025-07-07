@@ -42,7 +42,6 @@ export const initializeSocket = (server) => {
         socket.emit('error', { message: 'Failed to join chatrooms' });
       }
     });
-
     // Send message
     socket.on(
       'sendMessage',
@@ -63,6 +62,7 @@ export const initializeSocket = (server) => {
               { senderId, receiverId: receiverId },
               { senderId: receiverId, receiverId: senderId },
             ],
+            isDeleted: false,
           });
           let chatThread = {};
 

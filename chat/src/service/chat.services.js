@@ -47,6 +47,7 @@ export class ChatServices {
     pipeline.push({
       $match: {
         chatThreadId: new Types.ObjectId(chatThreadId),
+        isDeleted: false,
       },
     });
 
@@ -62,6 +63,12 @@ export class ChatServices {
 
   static async getChatThreads(userId, archived = false) {
     const pipeline = [];
+
+    pipeline.push({
+      $match: {
+        isDeleted: false,
+      },
+    });
 
     pipeline.push({
       $match: {
@@ -106,7 +113,7 @@ export class ChatServices {
     pipeline.push(
       {
         $unwind: {
-          path: '$archiveTheradUserId',
+          path: '$archiveThreadUserId',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -115,7 +122,7 @@ export class ChatServices {
           chatArchived: {
             $cond: [
               {
-                $eq: ['$archiveTheradUserId', new Types.ObjectId(userId)],
+                $eq: ['$archiveThreadUserId', new Types.ObjectId(userId)],
               },
               true,
               false,
@@ -132,6 +139,9 @@ export class ChatServices {
           receiverId: {
             $first: '$receiverId',
           },
+          senderUserInfo: {
+            $first: '$senderUserInfo',
+          },
           messageType: {
             $first: '$messageType',
           },
@@ -146,6 +156,9 @@ export class ChatServices {
           },
           isArchived: {
             $push: '$chatArchived',
+          },
+          pinThread: {
+            $first: '$pinThread',
           },
         },
       },
@@ -199,15 +212,37 @@ export class ChatServices {
       },
     });
 
-    pipeline.push({
-      $unwind: {
-        path: '$receiverUserInfo',
-        preserveNullAndEmptyArrays: false,
+    pipeline.push(
+      {
+        $unwind: {
+          path: '$receiverUserInfo',
+          preserveNullAndEmptyArrays: false,
+        },
       },
-    });
+      {
+        $unwind: {
+          path: '$pinThread',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          pinThread: {
+            $cond: [
+              {
+                $eq: ['$pinThread', new Types.ObjectId(userId)],
+              },
+              true,
+              false,
+            ],
+          },
+        },
+      },
+    );
 
     pipeline.push({
       $sort: {
+        pinThread: -1,
         updatedAt: -1,
       },
     });
@@ -226,8 +261,10 @@ export class ChatServices {
           { senderId: receiverId, receiverId: userId },
           { senderId: userId, receiverId },
         ],
+        isDeleted: false,
       });
       if (checkChatThreadExist) {
+        checkChatThreadExist.exist = true;
         return checkChatThreadExist;
       } else {
         const chatThreadInfo = await ChatThread.create({
@@ -241,6 +278,27 @@ export class ChatServices {
     }
   }
 
+  // static async createGroupChat(context, userId) {
+  //   try {
+  //     const checkChatGroupExist = await GroupChat.findOne({
+  //       title: title.context,
+  //       isDeleted: false,
+  //     });
+
+  //     if (checkChatGroupExist) {
+  //       throw new Error('Chat group existed successfully');
+  //     }
+
+  //     await GroupChat.create({
+  //       title: title.context,
+  //       admin: title.admin,
+  //       members: title.members,
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
+
   static async archiveChatThread(chatThreadId, userId) {
     // Check if the chat thread exists
     const chatThreadInfo = await ChatThread.findById(chatThreadId);
@@ -249,13 +307,13 @@ export class ChatServices {
     }
 
     const isUserAlreadyArchived =
-      chatThreadInfo.archiveTheradUserId.includes(userId);
+      chatThreadInfo.archiveThreadUserId.includes(userId);
     if (isUserAlreadyArchived) {
-      // remove user from archiveTheradUserId
+      // remove user from archiveThreadUserId
       const chatThread = await ChatThread.findByIdAndUpdate(
         chatThreadId,
         {
-          $pull: { archiveTheradUserId: userId },
+          $pull: { archiveThreadUserId: userId },
         },
         { new: true },
       );
@@ -265,10 +323,78 @@ export class ChatServices {
     const chatThread = await ChatThread.findByIdAndUpdate(
       chatThreadId,
       {
-        $addToSet: { archiveTheradUserId: userId },
+        $addToSet: { archiveThreadUserId: userId },
       },
       { new: true },
     );
     return chatThread;
+  }
+
+  static async pinChatThread(chatThreadId, userId) {
+    const chatThreadInfo = await ChatThread.findById(chatThreadId);
+    if (!chatThreadInfo) {
+      throw new Error('Chat thread not found');
+    }
+
+    const isThreadPinned = chatThreadInfo.pinThread.includes(userId);
+    if (isThreadPinned) {
+      // remove user from pinThread
+      const chatThread = await ChatThread.findByIdAndUpdate(
+        chatThreadId,
+        {
+          $pull: { pinThread: userId },
+        },
+        { new: true },
+      );
+      return chatThread;
+    }
+
+    const chatThread = await ChatThread.findByIdAndUpdate(
+      chatThreadId,
+      {
+        $addToSet: { pinThread: userId },
+      },
+      { new: true },
+    );
+    return chatThread;
+  }
+
+  static async deleteChatThread(chatThreadId, userId) {
+    // Check if the chat thread exists
+    const chatThreadInfo = await ChatThread.findById(chatThreadId);
+    if (!chatThreadInfo) {
+      throw new Error('Chat thread not found');
+    }
+    // check user chatTherad exist
+    const chatThreads = await ChatThread.findOne({
+      $or: [
+        {
+          _id: chatThreadId,
+          senderId: userId,
+        },
+        {
+          _id: chatThreadId,
+          receiverId: userId,
+        },
+      ],
+    });
+
+    if (!chatThreads) {
+      throw new Error('Chat Therad does not exist');
+    }
+    let status = chatThreads.isDeleted;
+    // soft delete chat therad
+    const updatedChatThread = await ChatThread.findOneAndUpdate(
+      {
+        _id: chatThreadId,
+      },
+      {
+        $set: {
+          isDeleted: !status,
+        },
+      },
+    );
+
+    return updatedChatThread;
   }
 }

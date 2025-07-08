@@ -80,10 +80,10 @@ export class ChatController {
    */
   static async createGroupChat(req, res) {
     const { userId } = req.user;
-    const { title, members } = req.body;
+    const { title, description, profile, members, admin } = req.body;
 
-    if (!title || !members) {
-      return res.status(400).json({ error: 'Invalid input in receiverId' });
+    if (!title || !description || !members || !admin) {
+      return res.status(400).json({ error: 'Invalid input' });
     }
     const chatThread = await ChatServices.createGroupChat(req.body, userId);
     log.info(`Chat thread created successfully`);

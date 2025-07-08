@@ -13,6 +13,12 @@ const chatThreadSchema = new mongoose.Schema(
     title: {
       type: String,
     },
+    profile: {
+      type: String,
+    },
+    description: {
+      type: String,
+    },
     lastMessage: {
       type: String,
       ref: 'Message',
@@ -33,15 +39,7 @@ const chatThreadSchema = new mongoose.Schema(
       type: [mongoose.Types.ObjectId],
       default: [],
     },
-    muteTheradUserId: {
-      type: [mongoose.Types.ObjectId],
-      default: [],
-    },
     pinThread: {
-      type: [mongoose.Types.ObjectId],
-      default: [],
-    },
-    isChatDeleted: {
       type: [mongoose.Types.ObjectId],
       default: [],
     },

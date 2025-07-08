@@ -303,31 +303,52 @@ export class ChatServices {
       }
 
       const newChatThread = await ChatThread.create({
-        title: context.title,
+        profile: context?.profile,
+        title: context?.title,
+        description: context?.description,
         isGroupChat: true,
         groupCreatedBy: userId,
       });
 
-      // create a admin
-      await ChatParticipant.create({
-        threadId: newChatThread._id,
-        userId: userId,
-        role: 'admin',
-      });
-
       // create rest of members
-      if (context.members.length > 0) {
-        let members = context.members;
-        members.forEach(async (member) => {
-          console.log('member :::::: ', member);
+      for (const member of context?.members || []) {
+        await ChatParticipant.create({
+          threadId: newChatThread._id,
+          userId: member,
+        });
+      }
+
+      // create admin members
+      for (const admin of context?.admin || []) {
+        const checkMemberExist = await ChatParticipant.findOne({
+          threadId: newChatThread._id,
+          userId: new Types.ObjectId(admin),
+          role: 'member',
+        });
+
+        if (!checkMemberExist) {
           await ChatParticipant.create({
             threadId: newChatThread._id,
-            userId: member,
+            userId: new Types.ObjectId(admin),
+            role: 'admin',
           });
-        });
+        } else {
+          await ChatParticipant.findOneAndUpdate(
+            {
+              threadId: newChatThread._id,
+              userId: new Types.ObjectId(admin),
+            },
+            {
+              $set: {
+                role: 'admin',
+              },
+            },
+          );
+        }
       }
     } catch (error) {
       console.log(error);
+      throw new Error('Error creating group chat');
     }
   }
 

@@ -17,6 +17,11 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    senderType: {
+      type: String,
+      enum: ['user', 'system'],
+      default: 'user',
+    },
     messageStatus: {
       type: String,
       enum: ['sent', 'delivered', 'read'],

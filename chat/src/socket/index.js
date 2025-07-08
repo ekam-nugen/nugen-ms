@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { Message } from '../schema/chat.schema.js';
 import { ChatThread } from '../schema/chatThread.schema.js';
+import { Types } from 'mongoose';
 export const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -25,7 +26,43 @@ export const initializeSocket = (server) => {
           isDeleted: false,
         });
 
-        // Join all chatrooms
+        //fetch all group chat threads for the user;
+        const getUserGroupChatThreads = await ChatThread.aggregate([
+          {
+            $match: {
+              isGroupChat: true,
+              isActive: true,
+            },
+          },
+          {
+            $lookup: {
+              from: 'chat-participant',
+              localField: '_id',
+              foreignField: 'threadId',
+              as: 'memberInfo',
+            },
+          },
+          {
+            $unwind: {
+              path: '$memberInfo',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $addFields: {
+              userId: '$memberInfo.userId',
+            },
+          },
+          {
+            $match: {
+              userId: new Types.ObjectId(userId),
+            },
+          },
+        ]);
+
+        chatThreads.push(...getUserGroupChatThreads);
+
+        // Join all chatroom
         for (const chatroomId of chatThreads) {
           console.log('chat room  id ', chatroomId?._id?.toString());
           socket.join(chatroomId?._id?.toString());

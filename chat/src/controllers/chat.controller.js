@@ -31,7 +31,7 @@ export class ChatController {
     res.json({ data: chatThread });
   }
   /**
-   * Get user chatTherds
+   * Get user chatThreads
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
@@ -78,24 +78,20 @@ export class ChatController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  static async createChatThreads(req, res) {
+  static async createGroupChat(req, res) {
     const { userId } = req.user;
-    const { title, admin, members, receiverId, isGroupChat = true } = req.body;
+    const { title, members } = req.body;
 
-    if (!title || !admin || !members || !receiverId) {
+    if (!title || !members) {
       return res.status(400).json({ error: 'Invalid input in receiverId' });
     }
-    const chatThread = await ChatServices.createChatThread(req.body, userId);
+    const chatThread = await ChatServices.createGroupChat(req.body, userId);
     log.info(`Chat thread created successfully`);
-    if (chatThread.exist) {
-      res.status(200).json({
-        message: 'Chat thread created successfully',
-        data: chatThread,
-      });
-    }
-    res
-      .status(201)
-      .json({ message: 'Chat thread created successfully', data: chatThread });
+
+    res.status(201).json({
+      message: 'Group Chat-thread created successfully',
+      // data: chatThread || [],
+    });
   }
 
   /**
@@ -138,7 +134,7 @@ export class ChatController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  static async deleteChatTherad(req, res) {
+  static async deleteChatThread(req, res) {
     const { chatThreadId } = req.params;
     const { userId } = req.user;
     const chatThread = await ChatServices.deleteChatThread(

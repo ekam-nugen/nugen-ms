@@ -1,5 +1,6 @@
 import { User } from '../schema/user.schema.js';
 import { ChatThread } from '../schema/chatThread.schema.js';
+import { ChatParticipant } from '../schema/chatParticipants.schema.js';
 import { Types } from 'mongoose';
 import { Message } from '../schema/chat.schema.js';
 const authBaseUrl = process.env.AUTH_SERVICE_URL; // organizational filter and service
@@ -249,6 +250,8 @@ export class ChatServices {
 
     // console.log(JSON.stringify(pipeline));
     const chatThreads = await ChatThread.aggregate(pipeline);
+    // get user group chat threads
+
     return chatThreads;
   }
 
@@ -271,6 +274,16 @@ export class ChatServices {
           senderId: userId,
           receiverId: receiverId,
         });
+        // create a participant for sender
+        await ChatParticipant.create({
+          threadId: chatThreadInfo._id,
+          userId: userId,
+        });
+        // create a participant for receiver
+        await ChatParticipant.create({
+          threadId: chatThreadInfo._id,
+          userId: receiverId,
+        });
         return chatThreadInfo;
       }
     } catch (error) {
@@ -278,26 +291,45 @@ export class ChatServices {
     }
   }
 
-  // static async createGroupChat(context, userId) {
-  //   try {
-  //     const checkChatGroupExist = await GroupChat.findOne({
-  //       title: title.context,
-  //       isDeleted: false,
-  //     });
+  static async createGroupChat(context, userId) {
+    try {
+      const checkChatGroupExist = await ChatThread.findOne({
+        title: context.title,
+        isDeleted: false,
+      });
 
-  //     if (checkChatGroupExist) {
-  //       throw new Error('Chat group existed successfully');
-  //     }
+      if (checkChatGroupExist) {
+        throw new Error('Chat group existed successfully');
+      }
 
-  //     await GroupChat.create({
-  //       title: title.context,
-  //       admin: title.admin,
-  //       members: title.members,
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
+      const newChatThread = await ChatThread.create({
+        title: context.title,
+        isGroupChat: true,
+        groupCreatedBy: userId,
+      });
+
+      // create a admin
+      await ChatParticipant.create({
+        threadId: newChatThread._id,
+        userId: userId,
+        role: 'admin',
+      });
+
+      // create rest of members
+      if (context.members.length > 0) {
+        let members = context.members;
+        members.forEach(async (member) => {
+          console.log('member :::::: ', member);
+          await ChatParticipant.create({
+            threadId: newChatThread._id,
+            userId: member,
+          });
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   static async archiveChatThread(chatThreadId, userId) {
     // Check if the chat thread exists
@@ -365,7 +397,7 @@ export class ChatServices {
     if (!chatThreadInfo) {
       throw new Error('Chat thread not found');
     }
-    // check user chatTherad exist
+    // check user chatThread exist
     const chatThreads = await ChatThread.findOne({
       $or: [
         {
@@ -380,10 +412,10 @@ export class ChatServices {
     });
 
     if (!chatThreads) {
-      throw new Error('Chat Therad does not exist');
+      throw new Error('Chat Thread does not exist');
     }
     let status = chatThreads.isDeleted;
-    // soft delete chat therad
+    // soft delete chat thread
     const updatedChatThread = await ChatThread.findOneAndUpdate(
       {
         _id: chatThreadId,

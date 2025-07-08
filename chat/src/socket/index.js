@@ -19,7 +19,7 @@ export const initializeSocket = (server) => {
           return;
         }
 
-        // fetch all chat threads for the user
+        // fetch all one to one chat threads for the user
         const chatThreads = await ChatThread.find({
           $or: [{ senderId: userId }, { receiverId: userId }],
           isDeleted: false,

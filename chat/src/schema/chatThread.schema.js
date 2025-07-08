@@ -10,6 +10,9 @@ const chatThreadSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       // required: true,
     },
+    title: {
+      type: String,
+    },
     lastMessage: {
       type: String,
       ref: 'Message',

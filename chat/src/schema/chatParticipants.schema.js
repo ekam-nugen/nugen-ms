@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 const chatParticipantSchema = new mongoose.Schema(
   {
     threadId: {
@@ -22,6 +24,13 @@ const chatParticipantSchema = new mongoose.Schema(
     isMuted: { type: Boolean, default: false },
     isArchived: { type: Boolean, default: false },
     isPinned: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true, collection: 'chat-participant' },
+);
+
+export const ChatParticipant = mongoose.model(
+  'chat-participant',
+  chatParticipantSchema,
 );

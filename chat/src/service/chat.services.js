@@ -44,6 +44,7 @@ export class ChatServices {
   }
 
   static async getChatByChatThreadId(chatThreadId) {
+    // need to implement group chat
     const pipeline = [];
     pipeline.push({
       $match: {
@@ -63,6 +64,7 @@ export class ChatServices {
   }
 
   static async getChatThreads(userId, archived = false) {
+    // need to implement group chat
     const pipeline = [];
 
     pipeline.push({
@@ -249,9 +251,51 @@ export class ChatServices {
     });
 
     // console.log(JSON.stringify(pipeline));
-    const chatThreads = await ChatThread.aggregate(pipeline);
-    // get user group chat threads
+    let chatThreads = await ChatThread.aggregate(pipeline);
 
+    //fetch all group chat threads for the user;
+    let getUserGroupChatThreads = await ChatThread.aggregate([
+      {
+        $match: {
+          isGroupChat: true,
+          isActive: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'chat-participant',
+          localField: '_id',
+          foreignField: 'threadId',
+          as: 'memberInfo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$memberInfo',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          userId: '$memberInfo.userId',
+        },
+      },
+      {
+        $match: {
+          userId: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $project: {
+          memberInfo: 0,
+        },
+      },
+    ]);
+
+    // merge both chat threads
+    if (getUserGroupChatThreads.length > 0) {
+      chatThreads = [...chatThreads, ...getUserGroupChatThreads];
+    }
     return chatThreads;
   }
 
@@ -293,13 +337,18 @@ export class ChatServices {
 
   static async createGroupChat(context, userId) {
     try {
+      if (context?.admin.length == 0 || context.admin == undefined) {
+        context.admin = [];
+        context.admin.push(userId);
+      }
+
       const checkChatGroupExist = await ChatThread.findOne({
         title: context.title,
         isDeleted: false,
       });
 
       if (checkChatGroupExist) {
-        throw new Error('Chat group existed successfully');
+        throw new Error('Chat group already exists');
       }
 
       const newChatThread = await ChatThread.create({
@@ -319,6 +368,7 @@ export class ChatServices {
       }
 
       // create admin members
+
       for (const admin of context?.admin || []) {
         const checkMemberExist = await ChatParticipant.findOne({
           threadId: newChatThread._id,
@@ -353,6 +403,7 @@ export class ChatServices {
   }
 
   static async archiveChatThread(chatThreadId, userId) {
+    // temporary
     // Check if the chat thread exists
     const chatThreadInfo = await ChatThread.findById(chatThreadId);
     if (!chatThreadInfo) {
@@ -410,6 +461,55 @@ export class ChatServices {
       { new: true },
     );
     return chatThread;
+  }
+
+  static async archiveChatThreadV2(chatThreadId, userId, method) {
+    // Check if the chat thread exists
+    const chatThreadInfo = await ChatThread.findById(chatThreadId);
+    if (!chatThreadInfo) {
+      throw new Error('Chat thread not found');
+    }
+
+    // check user chatThread exist
+    const chatParticipantsInfo = await ChatParticipant.findOne({
+      threadId: chatThreadId,
+      userId: userId,
+      isActive: true,
+      isDeleted: false,
+    });
+
+    if (!chatParticipantsInfo) {
+      throw new Error('Chat Thread does not exist for this user');
+    }
+    if (method == 'archive') {
+      let status = chatParticipantsInfo.isArchived;
+
+      await ChatParticipant.findOneAndUpdate(
+        {
+          threadId: chatThreadId,
+          userId: userId,
+        },
+        {
+          $set: {
+            isArchived: !status,
+          },
+        },
+      );
+    } else if (method == 'pin') {
+      let status = chatParticipantsInfo.isPinned;
+
+      await ChatParticipant.findOneAndUpdate(
+        {
+          threadId: chatThreadId,
+          userId: userId,
+        },
+        {
+          $set: {
+            isPinned: !status,
+          },
+        },
+      );
+    }
   }
 
   static async deleteChatThread(chatThreadId, userId) {

@@ -19,14 +19,16 @@ router
   .route('/create/group-chat')
   .post(authMiddleware, ChatController.createGroupChat);
 
-router
+router //temporary route
   .route('/chat-thread/archive/:chatThreadId')
   .get(authMiddleware, ChatController.archiveChatThread);
 
-router
+router //temporary route
   .route('/chat-thread/pin/:chatThreadId')
   .get(authMiddleware, ChatController.pinChatThread);
 
-// router.route('');
+router
+  .route('/chat-thread/:method/:chatThreadId')
+  .get(authMiddleware, ChatController.updateChatThreadStatus);
 
 export default router;

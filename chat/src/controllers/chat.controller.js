@@ -95,6 +95,25 @@ export class ChatController {
   }
 
   /**
+   * Archive/Pin/Mute chat thread
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  static async updateChatThreadStatus(req, res) {
+    const { method, chatThreadId } = req.params;
+    const { userId } = req.user;
+    const chatThread = await ChatServices.archiveChatThreadV2(
+      method,
+      chatThreadId,
+      userId,
+    );
+    log.info(`Chat thread ${method} status updated successfully`);
+    res.json({
+      message: `Chat thread ${method} status updated successfully`,
+    });
+  }
+
+  /**
    * Archive chat thread
    * @param {Object} req - Request object
    * @param {Object} res - Response object
@@ -108,6 +127,8 @@ export class ChatController {
     );
     log.info(`Chat thread archive status updated successfully`);
     res.json({
+      warning:
+        'NOTE::: This api is deprecated, use /chat/chat-thread/:method/:chatThreadId instead method can be archive/pin/mute',
       message: 'Chat thread archive status updated successfully',
       // data: chatThread,
     });
@@ -124,6 +145,8 @@ export class ChatController {
     const chatThread = await ChatServices.pinChatThread(chatThreadId, userId);
     log.info(`Chat thread pin status updated successfully`);
     res.json({
+      warning:
+        'NOTE::: This api is deprecated, use /chat/chat-thread/:method/:chatThreadId instead method can be archive/pin/mute',
       message: 'Chat thread pin status updated successfully',
       // data: chatThread,
     });

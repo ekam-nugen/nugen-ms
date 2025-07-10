@@ -24,7 +24,7 @@ const chatParticipantSchema = new mongoose.Schema(
     isMuted: { type: Boolean, default: false },
     isArchived: { type: Boolean, default: false },
     isPinned: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true, collection: 'chat-participant' },

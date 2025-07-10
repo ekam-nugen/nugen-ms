@@ -58,6 +58,11 @@ export const initializeSocket = (server) => {
               userId: new Types.ObjectId(userId),
             },
           },
+          {
+            $project: {
+              memberInfo: 0,
+            },
+          },
         ]);
 
         chatThreads.push(...getUserGroupChatThreads);
@@ -85,44 +90,68 @@ export const initializeSocket = (server) => {
       async ({
         senderId,
         receiverId,
+        chatThreadId,
         content,
         groupChat = false,
         imageUrl = null,
       }) => {
         try {
-          if (!senderId || !receiverId || (!content && !imageUrl)) {
-            socket.emit('error', { message: 'Invalid message format' });
-            return;
-          }
-          const checkChatThreadExist = await ChatThread.findOne({
-            $or: [
-              { senderId, receiverId: receiverId },
-              { senderId: receiverId, receiverId: senderId },
-            ],
-            isDeleted: false,
-          });
-          let chatThread = {};
+          if (groupChat) {
+            if (!senderId || !chatThreadId || (!content && !imageUrl)) {
+              socket.emit('error', { message: 'Invalid message format' });
+              return;
+            }
 
-          if (!checkChatThreadExist) {
-            chatThread = new ChatThread({
-              senderId,
-              receiverId: receiverId,
-              groupChat: false,
-              lastMessage: content,
+            // receiverId is groupChatThreadId in this case
+            const checkChatThreadExist = await ChatThread.findOne({
+              _id: chatThreadId,
+              isDeleted: false,
             });
-            await chatThread.save();
+
+            if (!checkChatThreadExist) {
+              return socket.emit('error', {
+                message: 'Chat thread does not exist',
+              });
+            } else {
+              await ChatThread.findByIdAndUpdate(checkChatThreadExist._id, {
+                lastMessage: content,
+              });
+            }
           } else {
-            await ChatThread.findByIdAndUpdate(checkChatThreadExist._id, {
-              lastMessage: content,
+            if (!senderId || !receiverId || (!content && !imageUrl)) {
+              socket.emit('error', { message: 'Invalid message format' });
+              return;
+            }
+            const checkChatThreadExist = await ChatThread.findOne({
+              $or: [
+                { senderId, receiverId: receiverId },
+                { senderId: receiverId, receiverId: senderId },
+              ],
+              isDeleted: false,
             });
+            let chatThread = {};
+
+            if (!checkChatThreadExist) {
+              chatThread = new ChatThread({
+                senderId,
+                receiverId: receiverId,
+                groupChat: false,
+                lastMessage: content,
+              });
+              await chatThread.save();
+            } else {
+              await ChatThread.findByIdAndUpdate(checkChatThreadExist._id, {
+                lastMessage: content,
+              });
+            }
+
+            // Create message in database
+            chatThreadId = checkChatThreadExist
+              ? checkChatThreadExist._id
+              : chatThread._id;
+
+            // console.log('chatThreadId');
           }
-
-          // Create message in database
-          let chatThreadId = checkChatThreadExist
-            ? checkChatThreadExist._id
-            : chatThread._id;
-
-          // console.log('chatThreadId');
           const message = new Message({
             senderId,
             receiverId,
@@ -134,7 +163,6 @@ export const initializeSocket = (server) => {
           });
 
           await message.save();
-
           // Broadcast message to the receiver's userId room
 
           io.to(chatThreadId?.toString()).emit('newMessage', message);

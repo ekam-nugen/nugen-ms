@@ -8,7 +8,7 @@ const messageSchema = new mongoose.Schema(
     },
     receiverId: {
       type: mongoose.Types.ObjectId,
-      required: true,
+      // required: true,
     },
     chatThreadId: {
       type: mongoose.Types.ObjectId,

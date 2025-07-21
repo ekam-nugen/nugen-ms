@@ -11,6 +11,10 @@ router
   .delete(authMiddleware, ChatController.deleteChatThread);
 
 router
+  .route('/chat-thread/:chatThreadId/participants')
+  .get(authMiddleware, ChatController.getChatParticipantsInfo);
+
+router
   .route('/chat-thread')
   .get(authMiddleware, ChatController.getUserChatThreads)
   .post(authMiddleware, ChatController.createChatThread);

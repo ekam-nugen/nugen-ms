@@ -2,6 +2,8 @@ import { Server } from 'socket.io';
 import { Message } from '../schema/chat.schema.js';
 import { ChatThread } from '../schema/chatThread.schema.js';
 import { Types } from 'mongoose';
+import { ChatParticipant } from '../schema/chatParticipants.schema.js';
+import { User } from '../schema/user.schema.js';
 export const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -19,6 +21,9 @@ export const initializeSocket = (server) => {
           socket.emit('error', { message: 'Invalid user ID' });
           return;
         }
+        //note: Join notification room
+        socket.join(userId.toString());
+        console.log(`User ${userId} joined their personal notification room`);
 
         // fetch all one to one chat threads for the user
         const chatThreads = await ChatThread.find({
@@ -69,6 +74,16 @@ export const initializeSocket = (server) => {
 
         // Join all chatroom
         for (const chatroomId of chatThreads) {
+          // update chat participant to initialized status
+          await ChatParticipant.findOneAndUpdate(
+            {
+              threadId: chatroomId?._id,
+              userId: userId,
+            },
+            { isUserInitialized: true },
+            { new: true, upsert: true },
+          );
+          // Join the chatroom
           console.log('chat room  id ', chatroomId?._id?.toString());
           socket.join(chatroomId?._id?.toString());
           console.log(`User ${userId} joined chatroom ${chatroomId}`);
@@ -96,62 +111,62 @@ export const initializeSocket = (server) => {
         imageUrl = null,
       }) => {
         try {
-          if (groupChat) {
-            if (!senderId || !chatThreadId || (!content && !imageUrl)) {
-              socket.emit('error', { message: 'Invalid message format' });
-              return;
-            }
-
-            // receiverId is groupChatThreadId in this case
-            const checkChatThreadExist = await ChatThread.findOne({
-              _id: chatThreadId,
-              isDeleted: false,
-            });
-
-            if (!checkChatThreadExist) {
-              return socket.emit('error', {
-                message: 'Chat thread does not exist',
-              });
-            } else {
-              await ChatThread.findByIdAndUpdate(checkChatThreadExist._id, {
-                lastMessage: content,
-              });
-            }
-          } else {
-            if (!senderId || !receiverId || (!content && !imageUrl)) {
-              socket.emit('error', { message: 'Invalid message format' });
-              return;
-            }
-            const checkChatThreadExist = await ChatThread.findOne({
-              $or: [
-                { senderId, receiverId: receiverId },
-                { senderId: receiverId, receiverId: senderId },
-              ],
-              isDeleted: false,
-            });
-            let chatThread = {};
-
-            if (!checkChatThreadExist) {
-              chatThread = new ChatThread({
-                senderId,
-                receiverId: receiverId,
-                groupChat: false,
-                lastMessage: content,
-              });
-              await chatThread.save();
-            } else {
-              await ChatThread.findByIdAndUpdate(checkChatThreadExist._id, {
-                lastMessage: content,
-              });
-            }
-
-            // Create message in database
-            chatThreadId = checkChatThreadExist
-              ? checkChatThreadExist._id
-              : chatThread._id;
-
-            // console.log('chatThreadId');
+          if (!senderId || !chatThreadId || (!content && !imageUrl)) {
+            socket.emit('error', { message: 'Invalid message format' });
+            return;
           }
+
+          //check if chatThreadId is valid
+          if (!Types.ObjectId.isValid(chatThreadId) || !chatThreadId) {
+            console.log('Invalid chat thread ID:', chatThreadId);
+            socket.emit('error', { message: 'Invalid chat thread ID' });
+            return;
+          }
+
+          if (!Types.ObjectId.isValid(senderId) || !senderId) {
+            console.log('Invalid sender ID:', senderId);
+            socket.emit('error', { message: 'Invalid sender ID' });
+            return;
+          }
+
+          const sendUserInfo = await User.findOne(
+            {
+              _id: senderId,
+              isDeleted: false,
+            },
+            {
+              firstName: 1,
+              lastName: 1,
+              email: 1,
+              image: 1,
+            },
+          );
+          if (!sendUserInfo) {
+            console.log('Sender user not found', senderId);
+            socket.emit('error', { message: 'Sender user not found' });
+            return;
+          }
+
+          // check if chatThread exists
+          const chatThread = await ChatThread.findById(chatThreadId);
+
+          if (!chatThread) {
+            socket.emit('error', { message: 'Chat thread does not exist' });
+            return;
+          }
+
+          await ChatThread.findByIdAndUpdate(chatThreadId, {
+            lastMessage: content,
+          });
+
+          // check for user ChatThread initialized
+          const userParticipantsInfo = await ChatParticipant.find({
+            threadId: chatThreadId,
+            isUserInitialized: false,
+          });
+
+          // Create chat participant if not exists
+
           const message = new Message({
             senderId,
             receiverId,
@@ -163,11 +178,26 @@ export const initializeSocket = (server) => {
           });
 
           await message.save();
-          // Broadcast message to the receiver's userId room
+          const newMessage = message.toObject();
+          newMessage.userInfo = sendUserInfo;
+          io.to(chatThreadId?.toString()).emit('newMessage', newMessage);
 
-          io.to(chatThreadId?.toString()).emit('newMessage', message);
+          if (userParticipantsInfo.length > 0) {
+            for (const user of userParticipantsInfo) {
+              let userId = user?.userId;
+              console.log('New Chat thread for User ID:', userId);
+              if (userId) {
+                io.to(userId.toString()).emit('newChatThread', newMessage);
+                await ChatParticipant.findOneAndUpdate({
+                  threadId: chatThreadId,
+                  userId: userId,
+                  isUserInitialized: true,
+                });
+              }
+            }
+          }
 
-          socket.emit('messageSent', message);
+          socket.emit('messageSent', newMessage);
         } catch (error) {
           console.error('Error handling message:', error);
           socket.emit('error', { message: 'Failed to send message' });

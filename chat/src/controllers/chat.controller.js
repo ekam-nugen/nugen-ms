@@ -90,7 +90,31 @@ export class ChatController {
 
     res.status(201).json({
       message: 'Group Chat-thread created successfully',
-      // data: chatThread || [],
+      data: chatThread || {},
+    });
+  }
+
+  /**
+   * Get user chatThread Info
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  static async getChatParticipantsInfo(req, res) {
+    const { userId } = req.user;
+    const { chatThreadId } = req.params;
+
+    if (!chatThreadId) {
+      return res.status(400).json({ error: 'Invalid input chatThreadId' });
+    }
+    const chatThread = await ChatServices.getChatThreadParticipantInfo(
+      userId,
+      chatThreadId,
+    );
+    log.info(`Chat thread created successfully`);
+
+    res.status(201).json({
+      message: 'Group Chat-thread members fetched successfully',
+      data: chatThread || {},
     });
   }
 

@@ -16,6 +16,9 @@ const chatParticipantSchema = new mongoose.Schema(
       default: 'member',
     },
 
+    //chat thread initialized
+    isUserInitialized: { type: Boolean, default: false },
+
     // Direct chat: user-specific view customization
     customImage: { type: String },
     customName: { type: String },

@@ -5,6 +5,7 @@ import {
   listOrganizations,
   updateOrganization,
   joinOrganization,
+  getOrganizationInfoById,
 } from '../controllers/organization.controller.js';
 import { validateRequest } from '../middleware/validate-request.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
@@ -16,6 +17,11 @@ router.post(
   validateRequest('createOrganization'),
   authenticateToken,
   createOrganization,
+);
+router.get(
+  '/organizationInfo/:organizationId',
+  authenticateToken,
+  getOrganizationInfoById,
 );
 router.post(
   '/check',

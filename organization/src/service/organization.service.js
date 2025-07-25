@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import {
   Invitation,
   Organization,
@@ -40,20 +40,33 @@ export const createOrganization = async (
   const existingOrg = await Organization.findOne(query);
   if (existingOrg && existingOrg.companyName === companyName) {
     throw new ValidationError(
-      'Company name already exists. Please choose a different name.',
+      'Email already exists. Please choose a different email.',
     );
   }
-  if (existingOrg && !allowed) {
+
+  let checkCompanyNameExist = await Organization.findOne({
+    companyName: { $regex: new RegExp(`^${companyName}$`, 'i') },
+  });
+  if (checkCompanyNameExist) {
     throw new ValidationError(
-      `${email ? 'Email' : 'Mobile'} already exists with this organization. Do you want to proceed with the same ${email ? 'email' : 'mobile'}?`,
+      'Company name already exists. Please choose a different company name.',
     );
   }
 
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
+  if (existingOrg && !allowed) {
+    return {
+      exist: true,
+    };
+    // throw new ValidationError(
+    //   `${email ? 'Email' : 'Mobile'} already exists with this organization. Do you want to proceed with the same ${email ? 'email' : 'mobile'}?`,
+    // );
+  }
 
-    const organization = new Organization({
+  // const session = await mongoose.startSession();
+  try {
+    // session.startTransaction();
+
+    const organization = await Organization.create({
       companyName,
       email,
       mobile,
@@ -63,27 +76,21 @@ export const createOrganization = async (
       logo,
       role,
     });
-    await organization.save({ session });
+    // await organization.save({ session });
 
-    const userOrg = new UserOrganization({
+    const userOrg = await UserOrganization.create({
       userId,
       companyId: organization._id,
       role: 'admin',
     });
-    await userOrg.save({ session });
+    // await userOrg.save({ session });
 
-    await session.commitTransaction();
+    // await session.commitTransaction();
 
-    return {
-      id: organization._id,
-      name: organization.name,
-      email: organization.email,
-      mobile: organization.mobile,
-      address: organization.address,
-      role: 'admin',
-    };
+    return userOrg;
   } catch (err) {
-    await session.abortTransaction();
+    console.log(err);
+    // await session.abortTransaction();
     if (err.type && err.statusCode) {
       throw err; // Re-throw validation or custom errors
     }
@@ -91,7 +98,18 @@ export const createOrganization = async (
       'Transaction failed while creating organization',
     );
   } finally {
-    session.endSession();
+    // session.endSession();
+  }
+};
+
+export const getOrganizationInfoById = async (orgId) => {
+  try {
+    const orgInfo = await Organization.findOne({
+      _id: orgId,
+    });
+    return orgInfo;
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -104,32 +122,53 @@ export const checkOrganization = async ({ email, mobile }) => {
       'Email or mobile is required to check organization',
     );
   }
-  const organization = await Organization.findOne(query);
+  const organization = await Organization.find(query);
   if (!organization) return null;
-  return {
-    companyName: organization.companyName,
-    email: organization.email,
-    mobile: organization.mobile,
-    exists: true,
-  };
+  return organization;
 };
 
 export const listOrganizations = async (userId) => {
-  const userOrgs = await UserOrganization.find({ userId }).populate(
-    'companyId',
-  );
-  return userOrgs.map((uo) => ({
-    userId: uo._id,
-    companyId: uo.companyId._id,
-    companyName: uo.companyId.companyName,
-    companyLogo: uo.companyId.logo,
-    companyIndustry: uo.companyId.industry,
-    companyEmployees: uo.companyId.employees,
-    companyFeatures: uo.companyId.features,
-    companyAddress: uo.companyId.address,
-    companyCreatedAt: uo.companyId.createdAt,
-    companyUpdatedAt: uo.companyId.updatedAt,
-  }));
+  const userOrgs = await UserOrganization.aggregate([
+    [
+      {
+        $match: {
+          userId: new Types.ObjectId(userId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'organizations',
+          localField: 'companyId',
+          foreignField: '_id',
+          as: 'organizationInfo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$organizationInfo',
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          companyId: '$organizationInfo._id',
+          companyName: '$organizationInfo.companyName',
+          // companyLogo: '$organizationInfo.logo',
+          companyLogo:
+            'https://cdn.connecteam.com/images/base-line/boarding/widgets/free-credits.svg',
+          companyIndustry: '$organizationInfo.industry',
+          companyEmployees: '$organizationInfo.employees',
+          companyFeatures: '$organizationInfo.features',
+          companyAddress: '$organizationInfo.address',
+          companyCreatedAt: '$organizationInfo.createdAt',
+          companyUpdatedAt: '$organizationInfo.updatedAt',
+        },
+      },
+    ],
+  ]);
+
+  return userOrgs;
 };
 
 export const updateOrganization = async (
@@ -181,35 +220,47 @@ export const updateOrganization = async (
 
 export const joinOrganization = async (
   token,
-  { email, password, firstName, lastName },
+  invitationLink,
+  { email, password, firstName, lastName, companyId, invitedBy },
 ) => {
-  const invitation = await Invitation.findOne({ token, status: 'pending' });
-  if (!invitation) {
-    throw {
-      type: 'Validation Error',
-      message: 'Invalid or expired invitation token',
-      statusCode: 400,
-    };
+  if (!invitationLink) {
+    const invitation = await Invitation.findOne({ token, status: 'pending' });
+    if (!invitation) {
+      throw {
+        type: 'Validation Error',
+        message: 'Invalid or expired invitation token',
+        statusCode: 400,
+      };
+    }
+    if (invitation.expiresAt < new Date()) {
+      invitation.status = 'expired';
+      await invitation.save();
+      throw {
+        type: 'Validation Error',
+        message: 'Invitation has expired',
+        statusCode: 400,
+      };
+    }
+    if (invitation.email.toLowerCase() !== email.toLowerCase()) {
+      throw {
+        type: 'Authorization Error',
+        message: 'Email does not match invitation',
+        statusCode: 403,
+      };
+    }
+    const organization = await Organization.findById(invitation.companyId);
+    if (!organization) {
+      throw {
+        type: 'Validation Error',
+        message: 'Organization not found',
+        statusCode: 404,
+      };
+    }
   }
-  if (invitation.expiresAt < new Date()) {
-    invitation.status = 'expired';
-    await invitation.save();
-    throw {
-      type: 'Validation Error',
-      message: 'Invitation has expired',
-      statusCode: 400,
-    };
-  }
-  if (invitation.email.toLowerCase() !== email.toLowerCase()) {
-    throw {
-      type: 'Authorization Error',
-      message: 'Email does not match invitation',
-      statusCode: 403,
-    };
-  }
-
-  const organization = await Organization.findById(invitation.companyId);
-  if (!organization) {
+  const organizationInfo = await Organization.findById({
+    _id: companyId,
+  });
+  if (!organizationInfo) {
     throw {
       type: 'Validation Error',
       message: 'Organization not found',
@@ -220,18 +271,20 @@ export const joinOrganization = async (
   // Sign up user via Authentication Microservice
   let userId;
   try {
-    const response = await axios.post('http://localhost:8000/email/signup', {
-      email,
-      password,
-      firstName,
-      lastName,
-    });
+    const response = await axios.post(
+      `${process.env.AUTH_SERVICE_URL}/email/signup`,
+      {
+        email,
+        password,
+        firstName,
+        lastName,
+        invitationStatus: 'pending',
+        invitedBy,
+        isInvited: true,
+      },
+    );
     if (response.data) {
-      sendResponse({
-        data: response.data,
-        message: 'Joining organization successful',
-        statusCode: 201,
-      });
+      return response.data;
     }
     console.log('User signed up successfully:', response.data);
   } catch (err) {

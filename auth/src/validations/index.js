@@ -7,6 +7,8 @@ import {
   loginWithOtpSchema,
   verifyOtpSchema,
   refreshTokenSchema,
+  createActivityLogSchema,
+  getActivityLogsByOrganisationSchema,
 } from './schemas.js';
 
 export {
@@ -18,4 +20,6 @@ export {
   loginWithOtpSchema,
   verifyOtpSchema,
   refreshTokenSchema,
+  createActivityLogSchema,
+  getActivityLogsByOrganisationSchema,
 };

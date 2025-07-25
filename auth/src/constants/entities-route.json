@@ -1,0 +1,19 @@
+{
+    "routes": [
+        {
+            "endpoint": "/create/org/json",
+            "method": "GET",
+            "entity": "organization"
+        },
+        {
+            "endpoint": "/chat-thread",
+            "method": "GET",
+            "entity": "chat"
+        },
+        {
+            "endpoint": "/chat-thread",
+            "method": "POST",
+            "entity": "chat"
+        }
+    ]
+}

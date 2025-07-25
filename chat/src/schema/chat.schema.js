@@ -27,6 +27,10 @@ const messageSchema = new mongoose.Schema(
       enum: ['sent', 'delivered', 'read'],
       default: 'sent',
     },
+    markAsReadBy: {
+      type: [mongoose.Types.ObjectId],
+      ref: 'User',
+    },
     messageType: {
       type: String,
       enum: ['text', 'image', 'file', 'audio', 'video'],

@@ -14,7 +14,7 @@ export const initializeSocket = (server) => {
   io.on('connection', async (socket) => {
     console.log('a user connected', socket.id);
 
-    // Initial connection - fetch and join all user's chatrooms
+    // Initial connection - fetch and join all user's chat rooms
     socket.on('initialize', async ({ userId }) => {
       try {
         if (!userId) {
@@ -155,9 +155,15 @@ export const initializeSocket = (server) => {
             return;
           }
 
-          await ChatThread.findByIdAndUpdate(chatThreadId, {
-            lastMessage: content,
-          });
+          let chatThreadInfo = await ChatThread.findByIdAndUpdate(
+            chatThreadId,
+            {
+              lastMessage: content,
+            },
+            {
+              new: 1,
+            },
+          );
 
           // check for user ChatThread initialized
           const userParticipantsInfo = await ChatParticipant.find({
@@ -196,8 +202,88 @@ export const initializeSocket = (server) => {
               }
             }
           }
-
+          // console.log('chatThreadInfo', chatThreadInfo);
           socket.emit('messageSent', newMessage);
+
+          //send updated chat thread Participant last message and count
+
+          const getChatParticipant = await ChatParticipant.find({
+            threadId: chatThreadId,
+          });
+
+          if (getChatParticipant.length > 0) {
+            for (const participant of getChatParticipant) {
+              const receiverUserId = participant.userId.toString();
+
+              console.log('receiver :', receiverUserId, ' sender ::', senderId);
+
+              if (receiverUserId === senderId) {
+                io.to(receiverUserId.toString()).emit('threadInfo', {
+                  _id: null,
+                  chatThreadId,
+                  messageContent: content,
+                });
+              } else {
+                const chatThreadPipeline = [
+                  {
+                    $match: {
+                      chatThreadId: new Types.ObjectId(chatThreadId),
+                      isDeleted: false,
+                      markAsReadBy: {
+                        $nin: [new Types.ObjectId(receiverUserId)],
+                      },
+                      senderId: {
+                        $ne: new Types.ObjectId(receiverUserId),
+                      },
+                    },
+                  },
+                  {
+                    $addFields: {
+                      count: {
+                        $cond: {
+                          if: {
+                            $ne: ['$messageStatus', 'read'],
+                          },
+                          then: 1,
+                          else: 0,
+                        },
+                      },
+                    },
+                  },
+                  {
+                    $sort: {
+                      updatedAt: -1,
+                    },
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      chatThreadId: {
+                        $first: '$chatThreadId',
+                      },
+                      messageCount: {
+                        $sum: '$count',
+                      },
+                      messageContent: {
+                        $first: '$messageContent',
+                      },
+                    },
+                  },
+                ];
+                // console.log(JSON.stringify(chatThreadPipeline));
+                chatThreadInfo = await Message.aggregate(chatThreadPipeline);
+
+                if (chatThreadInfo.length > 0) {
+                  io.to(receiverUserId.toString()).emit(
+                    'threadInfo',
+                    chatThreadInfo[0],
+                  );
+                }
+              }
+            }
+          }
+
+          // socket.io.to(chatThreadId?.toString()).emit('chat-thread', chatThreadInfo);
         } catch (error) {
           console.error('Error handling message:', error);
           socket.emit('error', { message: 'Failed to send message' });
@@ -252,7 +338,60 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // Handle disconnection
+    socket.on('markAsRead', async ({ userId, chatThreadId }) => {
+      try {
+        if (
+          !userId ||
+          !chatThreadId ||
+          !Types.ObjectId.isValid(userId) ||
+          !Types.ObjectId.isValid(chatThreadId)
+        ) {
+          socket.emit('error', { message: 'Invalid userId or messageIds' });
+          return;
+        }
+
+        // Find all active, unread messages in this thread for the user
+        const unreadMessages = await Message.find({
+          chatThreadId,
+          isDeleted: false,
+          isActive: true,
+          senderId: { $ne: userId },
+          markAsReadBy: { $ne: userId },
+        });
+
+        // console.log(unreadMessages.length);
+
+        if (unreadMessages.length === 0) {
+          return io.to(userId.toString()).emit('messages-seen', {
+            threadId: chatThreadId,
+            userId,
+            message: 'updated the message status to read',
+          });
+        }
+
+        const messageIds = unreadMessages.map((m) => m._id);
+
+        // Bulk update all messages
+        await Message.updateMany(
+          { _id: { $in: messageIds } },
+          {
+            $addToSet: { markAsReadBy: userId },
+            $set: { messageStatus: 'read' },
+          },
+        );
+
+        // Optional: Emit update back to the thread participants
+        io.to(userId.toString()).emit('messages-seen', {
+          threadId: chatThreadId,
+          userId,
+          message: 'updated the message status to read',
+        });
+      } catch (error) {
+        console.error('Error handling markAsRead:', error);
+        socket.emit('error', { message: 'Failed to mark messages as read' });
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log('User disconnected');
     });

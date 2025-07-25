@@ -12,7 +12,8 @@ router
 
 router
   .route('/chat-thread/:chatThreadId/participants')
-  .get(authMiddleware, ChatController.getChatParticipantsInfo);
+  .get(authMiddleware, ChatController.getChatThreadInfo)
+  .put(authMiddleware, ChatController.updateChatParticipantsInfo);
 
 router
   .route('/chat-thread')

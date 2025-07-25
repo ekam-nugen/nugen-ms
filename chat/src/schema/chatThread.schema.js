@@ -4,26 +4,42 @@ const chatThreadSchema = new mongoose.Schema(
   {
     senderId: {
       type: mongoose.Types.ObjectId,
-      required: true,
+      // required: true,
     },
     receiverId: {
       type: mongoose.Types.ObjectId,
-      required: true,
+      // required: true,
+    },
+    title: {
+      type: String,
+    },
+    profile: {
+      type: String,
+    },
+    description: {
+      type: String,
     },
     lastMessage: {
       type: String,
       ref: 'Message',
+    },
+    isGroupChat: {
+      type: Boolean,
+      default: false,
+    },
+    groupCreatedBy: {
+      type: mongoose.Types.ObjectId,
     },
     messageType: {
       type: String,
       enum: ['text', 'image', 'file', 'audio', 'video'],
       default: 'text',
     },
-    archiveTheradUserId: {
+    archiveThreadUserId: {
       type: [mongoose.Types.ObjectId],
       default: [],
     },
-    muteTheradUserId: {
+    pinThread: {
       type: [mongoose.Types.ObjectId],
       default: [],
     },

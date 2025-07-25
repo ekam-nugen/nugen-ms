@@ -8,7 +8,7 @@ const messageSchema = new mongoose.Schema(
     },
     receiverId: {
       type: mongoose.Types.ObjectId,
-      required: true,
+      // required: true,
     },
     chatThreadId: {
       type: mongoose.Types.ObjectId,
@@ -17,10 +17,19 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    senderType: {
+      type: String,
+      enum: ['user', 'system'],
+      default: 'user',
+    },
     messageStatus: {
       type: String,
       enum: ['sent', 'delivered', 'read'],
       default: 'sent',
+    },
+    markAsReadBy: {
+      type: [mongoose.Types.ObjectId],
+      ref: 'User',
     },
     messageType: {
       type: String,

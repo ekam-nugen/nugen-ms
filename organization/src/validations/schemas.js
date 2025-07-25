@@ -72,7 +72,7 @@ export const updateOrganizationSchema = {
     companyName: { type: 'string', minLength: 1 },
     mobile: { type: 'string', pattern: '^[0-9]{10}$', nullable: true },
     industry: { type: 'string', nullable: true },
-    employees: { type: 'number', nullable: true },
+    employees: { type: 'string', nullable: true },
     role: { type: 'string', nullable: true },
     features: { type: 'array', items: { type: 'string' } },
     logo: { type: 'string', nullable: true },

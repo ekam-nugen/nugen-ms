@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post(
   '/invitation/create',
-  validateRequest('createInvitation'),
+  // validateRequest('createInvitation'),
   authenticateToken,
   createInvitation,
 );

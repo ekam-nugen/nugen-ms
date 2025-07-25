@@ -32,6 +32,20 @@ const userSchema = new mongoose.Schema(
     providerId: {
       type: String,
     },
+    isInvited: {
+      type: Boolean,
+    },
+    invitationStatus: {
+      type: String,
+      enum: ['pending', 'approved'],
+    },
+    invitedBy: {
+      type: mongoose.Types.ObjectId,
+    },
+    roleId: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Role',
+    },
     logo: {
       type: String,
     },

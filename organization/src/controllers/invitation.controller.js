@@ -2,12 +2,24 @@ import * as invitationService from '../service/invitation.service.js';
 import sendResponse from '../utils/response.handler.js';
 
 export const createInvitation = async (req, res) => {
+  const { invitationLink = false } = req.query;
   const { email, deliveryMethod, companyId } = req.body;
-  if (!email || !deliveryMethod) {
+  if (!invitationLink) {
+    if (!email || !deliveryMethod) {
+      return sendResponse(res, {
+        error: {
+          type: 'Validation Error',
+          message: 'Email and deliveryMethod are required',
+          statusCode: 400,
+        },
+      });
+    }
+  }
+  if (!companyId) {
     return sendResponse(res, {
       error: {
         type: 'Validation Error',
-        message: 'Email and deliveryMethod are required',
+        message: 'companyId is required',
         statusCode: 400,
       },
     });
@@ -15,6 +27,7 @@ export const createInvitation = async (req, res) => {
   try {
     const invitation = await invitationService.createInvitation(
       req.user.userId,
+      invitationLink,
       // req.body.companyId,
       companyId,
       {

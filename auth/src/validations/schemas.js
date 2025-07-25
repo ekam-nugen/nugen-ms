@@ -25,6 +25,9 @@ export const signupSchema = {
     password: { type: 'string', minLength: 6 },
     firstName: { type: 'string', minLength: 1 },
     lastName: { type: 'string', minLength: 1 },
+    invitationStatus: { type: 'string' },
+    invitedBy: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+    isInvited: { type: 'boolean' },
   },
   required: ['email', 'password', 'firstName', 'lastName'],
   additionalProperties: false,
@@ -155,6 +158,136 @@ export const validateTokenSchema = {
     required: 'Access Token is required',
     properties: {
       token: 'Access Token is required',
+    },
+  },
+};
+export const createActivityLogSchema = {
+  type: 'object',
+  properties: {
+    organisationId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+    userId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+    action: {
+      type: 'string',
+      enum: ['create', 'update', 'delete', 'view', 'login', 'logout', 'other'],
+    },
+    description: { type: 'string', minLength: 1 },
+    resourceType: {
+      type: 'string',
+      enum: ['project', 'task', 'timeclock', 'user', 'organisation', 'other'],
+    },
+    resourceId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+  },
+  required: [
+    'organisationId',
+    'userId',
+    'action',
+    'description',
+    'resourceType',
+    'resourceId',
+  ],
+  additionalProperties: false,
+  errorMessage: {
+    required: {
+      organisationId: 'Organisation ID is required',
+      userId: 'User ID is required',
+      action: 'Action is required',
+      description: 'Description is required',
+      resourceType: 'Resource type is required',
+      resourceId: 'Resource ID is required',
+    },
+    properties: {
+      organisationId: 'Organisation ID must be a valid MongoDB ObjectId',
+      userId: 'User ID must be a valid MongoDB ObjectId',
+      action:
+        'Action must be one of: create, update, delete, view, login, logout, other',
+      description: 'Description must be a non-empty string',
+      resourceType:
+        'Resource type must be one of: project, task, timeclock, user, organisation, other',
+      resourceId: 'Resource ID must be a valid MongoDB ObjectId',
+    },
+  },
+};
+
+export const getActivityLogSchema = {
+  type: 'object',
+  properties: {
+    logId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+  },
+  required: ['logId'],
+  additionalProperties: false,
+  errorMessage: {
+    required: {
+      logId: 'Log ID is required',
+    },
+    properties: {
+      logId: 'Log ID must be a valid MongoDB ObjectId',
+    },
+  },
+};
+
+export const getActivityLogsByOrganisationSchema = {
+  type: 'object',
+  properties: {
+    organisationId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+  },
+  required: ['organisationId'],
+  additionalProperties: false,
+  errorMessage: {
+    required: {
+      organisationId: 'Organisation ID is required',
+    },
+    properties: {
+      organisationId: 'Organisation ID must be a valid MongoDB ObjectId',
+    },
+  },
+};
+
+export const updateActivityLogSchema = {
+  type: 'object',
+  properties: {
+    logId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+    action: {
+      type: 'string',
+      enum: ['create', 'update', 'delete', 'view', 'login', 'logout', 'other'],
+    },
+    description: { type: 'string', minLength: 1 },
+    resourceType: {
+      type: 'string',
+      enum: ['project', 'task', 'timeclock', 'user', 'organisation', 'other'],
+    },
+    resourceId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+  },
+  required: ['logId'],
+  additionalProperties: false,
+  errorMessage: {
+    required: {
+      logId: 'Log ID is required',
+    },
+    properties: {
+      logId: 'Log ID must be a valid MongoDB ObjectId',
+      action:
+        'Action must be one of: create, update, delete, view, login, logout, other',
+      description: 'Description must be a non-empty string',
+      resourceType:
+        'Resource type must be one of: project, task, timeclock, user, organisation, other',
+      resourceId: 'Resource ID must be a valid MongoDB ObjectId',
+    },
+  },
+};
+
+export const deleteActivityLogSchema = {
+  type: 'object',
+  properties: {
+    logId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+  },
+  required: ['logId'],
+  additionalProperties: false,
+  errorMessage: {
+    required: {
+      logId: 'Log ID is required',
+    },
+    properties: {
+      logId: 'Log ID must be a valid MongoDB ObjectId',
     },
   },
 };

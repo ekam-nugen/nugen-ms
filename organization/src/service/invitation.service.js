@@ -5,6 +5,7 @@ import { ValidationError } from '../utils/errors.js';
 
 export const createInvitation = async (
   adminUserId,
+  invitationLink,
   companyId,
   { email, deliveryMethod },
 ) => {
@@ -22,27 +23,30 @@ export const createInvitation = async (
   }
 
   const token = crypto.randomBytes(32).toString('hex');
+  // const token =
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-  const invitation = new Invitation({
-    token,
-    email,
-    companyId,
-    expiresAt,
-    status: 'pending',
-    createdBy: adminUserId,
-  });
-  await invitation.save();
-
-  const joinLink = `http://localhost:8001/join/${token}`;
+  if (!invitationLink) {
+    const invitation = new Invitation({
+      token,
+      email,
+      companyId,
+      expiresAt,
+      status: 'pending',
+      createdBy: adminUserId,
+    });
+    await invitation.save();
+  }
+  const joinLink = `${process.env.CLIENT_SIDE_BASE_URL}/invitationCard/${token}/company/${companyId}/user/${adminUserId}`;
 
   if (deliveryMethod === 'email') {
     // await sendEmailInvitation(email, joinLink);
   } else if (deliveryMethod === 'sms') {
     // await sendSmsInvitation(email, joinLink);
-  } else {
-    throw new ValidationError('Invalid delivery method. Use "email" or "sms".');
   }
+  // else {
+  //   throw new ValidationError('Invalid delivery method. Use "email" or "sms".');
+  // }
 
   return { token, email, companyId, expiresAt, joinLink };
 };

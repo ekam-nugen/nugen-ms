@@ -39,6 +39,31 @@ const userSchema = new mongoose.Schema(
         return this.provider !== 'email';
       },
     },
+    isInvited: {
+      type: Boolean,
+    },
+    invitationStatus: {
+      type: String,
+      enum: ['pending', 'approved'],
+    },
+    invitedBy: {
+      type: mongoose.Types.ObjectId,
+    },
+    roleId: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Role',
+    },
+    logo: {
+      type: String,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

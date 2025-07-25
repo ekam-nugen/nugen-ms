@@ -6,20 +6,37 @@
                 "text": "Switch to user's view"
             },
             {
-                "icon": "IoSettingsOutline",
-                "text": "Setting"
+                "icon": "CgOrganisation",
+                "text": "Switch to Other Organization",
+                "link": "/switchOrganization"
             },
             {
-                "icon": "IoIosNotificationsOutline",
-                "text": "Notification"
+                "icon": "BsBuildingFillAdd",
+                "text": "Add New Organization",
+                "link": "/onboarding"
+            },
+            {
+                "icon": "FiEdit3",
+                "text": "Edit Organization",
+                "link": "/onboarding"
             },
             {
                 "icon": "CgProfile",
                 "text": "Admin dashboard"
             },
             {
+                "icon": "IoIosNotificationsOutline",
+                "text": "Notification"
+            },
+            {
+                "icon": "IoSettingsOutline",
+                "text": "Settings",
+                "link": "settings"
+            },
+            {
                 "icon": "CgLogOff",
-                "text": "Sign out"
+                "text": "Sign out",
+                "link": "/login"
             }
         ],
         "actionIcons": [
@@ -49,12 +66,14 @@
                 {
                     "icon": "LuLayoutGrid",
                     "title": "Overview",
-                    "color": ""
+                    "color": "",
+                    "link": "/"
                 },
                 {
                     "icon": "CgFormatLeft",
                     "title": "Activity",
-                    "color": ""
+                    "color": "",
+                    "link": "/activity"
                 }
             ]
         },
@@ -65,48 +84,62 @@
                 {
                     "icon": "SlUser",
                     "title": "User",
-                    "color": ""
+                    "color": "",
+                    "link": "/users"
                 },
                 {
                     "icon": "FiUsers",
                     "title": "Smart groups",
-                    "color": ""
+                    "color": "",
+                    "link": "/smart-groups"
+                },
+                {
+                    "icon": "IoSettings",
+                    "title": "ACL",
+                    "color": "",
+                    "link": "/access-control"
                 }
             ]
         },
         {
             "title": "Communication",
-            "section": "Communicaiton",
+            "section": "Communication",
             "items": [
                 {
                     "icon": "PiChats",
                     "title": "Chat",
-                    "color": "bg-orange-400"
+                    "color": "bg-orange-400",
+                    "link": "/chat"
                 },
                 {
                     "icon": "CiMail",
                     "title": "Updates",
-                    "color": "bg-blue-400"
+                    "color": "bg-blue-400",
+                    "link": "/update"
                 },
                 {
                     "title": "KnowledgeBase",
                     "icon": "PiAddressBook",
-                    "color": "bg-pink-400"
+                    "color": "bg-pink-400",
+                    "link": "/knowledge-based"
                 },
                 {
                     "icon": "TiStopwatch",
                     "title": "Quizzes",
-                    "color": "bg-blue-400"
+                    "color": "bg-blue-400",
+                    "link": "/quizzes"
                 },
                 {
                     "icon": "MdOutlineSupportAgent",
                     "title": "Help Desk",
-                    "color": "bg-red-400"
+                    "color": "bg-red-400",
+                    "link": "/help-desk"
                 },
                 {
                     "icon": "SiBookstack",
                     "title": "Forms",
-                    "color": "bg-purple-400"
+                    "color": "bg-purple-400",
+                    "link": "/forms"
                 }
             ],
             "addOption": [
@@ -146,52 +179,50 @@
                 {
                     "icon": "SiBookstack",
                     "title": "Courses",
-                    "color": "bg-blue-400"
+                    "color": "bg-blue-400",
+                    "link": "/courses"
                 },
                 {
                     "icon": "SiReacthookform",
                     "title": "Forms",
-                    "color": "bg-purple-400"
+                    "color": "bg-purple-400",
+                    "link": "/forms"
+                },
+                {
+                    "icon": "SiReacthookform",
+                    "title": "Time Clock",
+                    "color": "bg-purple-600",
+                    "link": "/time-clock"
                 },
                 {
                     "icon": "AiOutlineSchedule",
                     "title": "Job Schedule",
-                    "color": "bg-orange-400"
+                    "color": "bg-orange-400",
+                    "link": "/job-schedule"
                 },
                 {
                     "icon": "BiSelectMultiple",
                     "title": "Quick Task",
-                    "color": "bg-green-400"
+                    "color": "bg-green-400",
+                    "link": "/quick-task"
                 },
                 {
                     "icon": "TiStopwatch",
                     "title": "Quizzes",
-                    "color": "bg-blue-400"
+                    "color": "bg-blue-400",
+                    "link": "/quizzes"
                 },
                 {
                     "icon": "IoDocumentOutline",
                     "title": "Documents",
-                    "color": "bg-sky-400"
-                },
-                {
-                    "icon": "AiOutlineSchedule",
-                    "title": "Performance tracking",
-                    "color": "bg-pink-400"
-                },
-                {
-                    "icon": "BiSelectMultiple",
-                    "title": "Employees feedback",
-                    "color": "bg-green-400"
+                    "color": "bg-sky-400",
+                    "link": "/documents"
                 },
                 {
                     "icon": "MdOutlineCelebration",
                     "title": "Recognition & rewards",
-                    "color": "bg-yellow-400"
-                },
-                {
-                    "icon": "IoDocumentOutline",
-                    "title": "Finance & Budgeting",
-                    "color": "bg-sky-400"
+                    "color": "bg-yellow-400",
+                    "link": "/recognition"
                 }
             ],
             "addOption": [
@@ -231,17 +262,20 @@
                 {
                     "icon": "IoDocumentOutline",
                     "title": "Documents",
-                    "color": "bg-sky-400"
+                    "color": "bg-sky-400",
+                    "link": "/documents"
                 },
                 {
                     "icon": "MdOutlineCelebration",
                     "title": "Celebrations",
-                    "color": "bg-orange-400"
+                    "color": "bg-orange-400",
+                    "link": "/celebrations"
                 },
                 {
                     "title": "KnowledgeBase",
                     "icon": "PiAddressBook",
-                    "color": "bg-pink-400"
+                    "color": "bg-pink-400",
+                    "link": "/knowledge-based"
                 }
             ],
             "addOption": [

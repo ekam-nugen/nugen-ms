@@ -12,6 +12,12 @@ export const createOrganization = async (req, res) => {
       details,
     );
     log.info(`Organization created: ${details.email}`);
+    if (organization.exist) {
+      return sendResponse(res, {
+        message: 'Organization already exist',
+        statusCode: 200,
+      });
+    }
     return sendResponse(res, {
       data: organization,
       message: 'Organization created successfully',
@@ -23,15 +29,33 @@ export const createOrganization = async (req, res) => {
   }
 };
 
+export const getOrganizationInfoById = async (req, res) => {
+  try {
+    const { organizationId } = req.params;
+    const organization =
+      await orgService.getOrganizationInfoById(organizationId);
+    // log.info(
+    //   `Organization: ${req.user.mobile || req.user.email} by user: ${req.user.email}`,
+    // );
+    return sendResponse(res, {
+      data: organization || {},
+      message: `Organization checked: ${req.user.mobile || req.user.email}`,
+    });
+  } catch (err) {
+    log.error(`Check organization error: ${err.message}`);
+    return sendResponse(res, { error: err });
+  }
+};
+
 export const checkOrganization = async (req, res) => {
   try {
     const { email, mobile } = req.body;
     const organization = await orgService.checkOrganization({ email, mobile });
-    log.info(
-      `Organization: ${req.user.mobile || req.user.email} by user: ${req.user.email}`,
-    );
+    // log.info(
+    //   `Organization: ${req.user.mobile || req.user.email} by user: ${req.user.email}`,
+    // );
     return sendResponse(res, {
-      data: organization || { exists: false },
+      data: organization || [],
       message: `Organization checked: ${req.user.mobile || req.user.email}`,
     });
   } catch (err) {
@@ -84,8 +108,22 @@ export const updateOrganization = async (req, res) => {
 
 export const joinOrganization = async (req, res) => {
   try {
-    let { email, password, firstName, lastName } = req.body;
-    if (!email || !password) {
+    const { invitationLink } = req.query;
+    const { email, password, firstName, lastName, companyId, invitedBy } =
+      req.body;
+
+    if (invitationLink) {
+      if (!companyId) {
+        return sendResponse(res, {
+          error: {
+            type: 'Validation Error',
+            message: 'CompanyId is required',
+            statusCode: 400,
+          },
+        });
+      }
+    }
+    if (!email || !password || !firstName || !lastName || !invitedBy) {
       return sendResponse(res, {
         error: {
           type: 'Validation Error',
@@ -94,15 +132,21 @@ export const joinOrganization = async (req, res) => {
         },
       });
     }
-    const result = await orgService.joinOrganization(req.params.token, {
-      email,
-      password,
-      firstName,
-      lastName,
-    });
+    const result = await orgService.joinOrganization(
+      req.params.token,
+      invitationLink,
+      {
+        email,
+        password,
+        firstName,
+        lastName,
+        companyId,
+        invitedBy,
+      },
+    );
     return sendResponse(res, {
       data: result,
-      message: `User joined organization: ${result.id}`,
+      message: `User joined organization: ${result?.data?.user?.id}`,
       statusCode: 200,
     });
   } catch (err) {

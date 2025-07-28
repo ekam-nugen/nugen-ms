@@ -4,6 +4,14 @@ import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/users', authenticateToken, UserController.getAllUserList);
+router
+  .route('/users')
+  .get(authenticateToken, UserController.getAllUserList)
+  .patch(authenticateToken, UserController.userActivityStatus);
+
+router
+  .route('/user/:userId')
+  .get(authenticateToken, UserController.getUserInfoById)
+  .put(authenticateToken, UserController.updateUserInfo);
 
 export default router;

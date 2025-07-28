@@ -3,7 +3,7 @@ import { DashboardService } from "../service/dashboard.service.js";
 
 export const getCreateOrganizationJson = async (req, res) => {
   try {
-    const json = DashboardService.getCreateOrganizatoinJson();
+    const json = DashboardService.getCreateOrganizationJson();
     return res.status(200).json({
       data: json,
       message: "Create organization JSON send successfully",
@@ -16,9 +16,10 @@ export const getCreateOrganizationJson = async (req, res) => {
 
 export const getDashboardData = async (req, res) => {
   try {
-    const json = DashboardService.getDashboardJson();
+    const { jsonData } = req.query;
+    const json = DashboardService.getDashboardJson(jsonData);
     return res.status(200).json({
-      data: json.dashboard,
+      data: json,
       message: "Organization JSON send successfully",
     });
   } catch (err) {
@@ -27,7 +28,7 @@ export const getDashboardData = async (req, res) => {
   }
 };
 
-export const getlayoutData = async (req, res) => {
+export const getLayoutData = async (req, res) => {
   try {
     const json = DashboardService.getLayoutJson();
     return res.status(200).json({

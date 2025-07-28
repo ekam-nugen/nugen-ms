@@ -7,7 +7,7 @@ export class DashboardService {
    * Get create organization JSON
    * @returns {Json} Json data
    */
-  static getCreateOrganizatoinJson = () => {
+  static getCreateOrganizationJson = () => {
     try {
       return orgJson;
     } catch (error) {
@@ -31,9 +31,28 @@ export class DashboardService {
    * Get dashboard JSON
    * @returns {Json} Json data
    */
-  static getDashboardJson = () => {
+  static getDashboardJson = (query) => {
     try {
-      return dashboard;
+      const data = dashboard.dashboard;
+      // console.log("query", query);
+      switch (query) {
+        case "tasks":
+          return data.tasks;
+        case "quickActions":
+          return data.quickActions;
+        case "quickTask":
+          return data.quickTask;
+        case "attendanceData":
+          return data.attendanceData;
+        case "dailyActivity":
+          return data.dailyActivity;
+        case "engagementTableData":
+          return data.engagementTableData;
+        case "leftSideOverview":
+          return data.leftSideOverview;
+        default:
+          return { error: "No value found for the given query" };
+      }
     } catch (error) {
       console.log(error);
     }

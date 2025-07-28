@@ -100,16 +100,6 @@
                 "color": "text-blue-500"
             }
         ],
-        "attendance": [
-            {
-                "icons": "FaRunning",
-                "iconDescription": "Nobody is running late"
-            },
-            {
-                "icons": "FaClock",
-                "iconDescription": "Nobody is clocked in"
-            }
-        ],
         "attendanceData": [
             {
                 "label": "Running late",
@@ -131,107 +121,111 @@
             "messageSubtitle": "Once your users interact with the app\nyou’ll see it here",
             "buttonLabel": "View History"
         },
-        "engagementData": [
-            {
-                "date": "08/05",
-                "value": 0
-            },
-            {
-                "date": "10/05",
-                "value": 0
-            },
-            {
-                "date": "12/05",
-                "value": 0
-            },
-            {
-                "date": "14/05",
-                "value": 0
-            },
-            {
-                "date": "16/05",
-                "value": 0
-            },
-            {
-                "date": "18/05",
-                "value": 1
-            },
-            {
-                "date": "20/05",
-                "value": 2
-            },
-            {
-                "date": "21/05",
-                "value": 1
-            }
-        ],
-        "tabledata": [
-            {
-                "title": "Engagement",
-                "subtitle": "Activity data for selected timeframe",
-                "groupLabel": "Marketing Team"
-            }
-        ],
-        "leftSideOverviewData": {
-            "videoCard": {
-                "title": "All about Connecteam",
-                "video": {
-                    "src": "https://www.w3schools.com/html/mov_bbb.mp4",
-                    "type": "video/mp4"
+        "engagementTableData": {
+            "engagementData": [
+                {
+                    "date": "08/05",
+                    "value": 0
                 },
-                "closeIcon": "FaTimes"
-            },
-            "milestones": {
-                "achieved": {
-                    "title": "Achieved milestones",
-                    "icon": "PiNumberThreeBold",
-                    "count": 3,
-                    "label": "Tasks Completed"
+                {
+                    "date": "10/05",
+                    "value": 0
                 },
-                "nextTitle": "Next milestones",
-                "next": [
-                    {
-                        "icon": "FaClock",
-                        "label": "5 clock-ins made",
-                        "progress": 0,
-                        "gradient": "from-blue-400 to-blue-600"
-                    },
-                    {
-                        "icon": "FaCalendarAlt",
-                        "label": "5 published shifts",
-                        "progress": 25,
-                        "gradient": "from-blue-400 to-blue-600"
-                    },
-                    {
-                        "icon": "MdChatBubbleOutline",
-                        "label": "50 chat messages sent",
-                        "progress": 5,
-                        "gradient": "from-purple-400 to-purple-600",
-                        "stars": 2
-                    },
-                    {
-                        "icon": "FaEnvelope",
-                        "label": "5 update interactions",
-                        "progress": 90,
-                        "gradient": "from-blue-400 to-blue-600"
-                    }
-                ]
-            }
+                {
+                    "date": "12/05",
+                    "value": 0
+                },
+                {
+                    "date": "14/05",
+                    "value": 0
+                },
+                {
+                    "date": "16/05",
+                    "value": 0
+                },
+                {
+                    "date": "18/05",
+                    "value": 1
+                },
+                {
+                    "date": "20/05",
+                    "value": 2
+                },
+                {
+                    "date": "21/05",
+                    "value": 1
+                }
+            ],
+            "tabledata": [
+                {
+                    "title": "Engagement",
+                    "subtitle": "Activity data for selected timeframe",
+                    "groupLabel": "Marketing Team"
+                }
+            ]
         },
-        "cards": [
-            {
-                "id": "credit",
-                "description": "Get up to 170$ worth of credits to use when upgrading to our paid",
-                "buttonLabel": "Get Credit",
-                "imageUrl": "https://cdn.connecteam.com/images/base-line/boarding/widgets/free-credits.svg"
+        "leftSideOverview": {
+            "leftSideOverviewData": {
+                "videoCard": {
+                    "title": "All about Connecteam",
+                    "video": {
+                        "src": "https://www.w3schools.com/html/mov_bbb.mp4",
+                        "type": "video/mp4"
+                    },
+                    "closeIcon": "FaTimes"
+                },
+                "milestones": {
+                    "achieved": {
+                        "title": "Achieved milestones",
+                        "icon": "PiNumberThreeBold",
+                        "count": 3,
+                        "label": "Tasks Completed"
+                    },
+                    "nextTitle": "Next milestones",
+                    "next": [
+                        {
+                            "icon": "FaClock",
+                            "label": "5 clock-ins made",
+                            "progress": 0,
+                            "gradient": "from-blue-400 to-blue-600"
+                        },
+                        {
+                            "icon": "FaCalendarAlt",
+                            "label": "5 published shifts",
+                            "progress": 25,
+                            "gradient": "from-blue-400 to-blue-600"
+                        },
+                        {
+                            "icon": "MdChatBubbleOutline",
+                            "label": "50 chat messages sent",
+                            "progress": 5,
+                            "gradient": "from-purple-400 to-purple-600",
+                            "stars": 2
+                        },
+                        {
+                            "icon": "FaEnvelope",
+                            "label": "5 update interactions",
+                            "progress": 90,
+                            "gradient": "from-blue-400 to-blue-600"
+                        }
+                    ]
+                }
             },
-            {
-                "id": "invite",
-                "description": "Users didn't log in to the app yet",
-                "buttonLabel": "Select users to invite",
-                "icon": "PiNumberThreeBold",
-                "iconClassName": "text-accent bg-gradient-to-r from-blue-600 to-violet-600 rounded-md text-2xl shadow-xl"
-            }
-        ]
+            "cards": [
+                {
+                    "id": "credit",
+                    "description": "Get up to 170$ worth of credits to use when upgrading to our paid",
+                    "buttonLabel": "Get Credit",
+                    "imageUrl": "https://cdn.connecteam.com/images/base-line/boarding/widgets/free-credits.svg"
+                },
+                {
+                    "id": "invite",
+                    "description": "Users didn't log in to the app yet",
+                    "buttonLabel": "Select users to invite",
+                    "icon": "PiNumberThreeBold",
+                    "iconClassName": "text-accent bg-gradient-to-r from-blue-600 to-violet-600 rounded-md text-2xl shadow-xl"
+                }
+            ]
+        }
     }
 }

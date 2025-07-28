@@ -14,7 +14,15 @@ export class EmailConnector {
    * @param {Object} params - User details
    * @returns {Object} User data
    */
-  async signup({ email, password, firstName, lastName }) {
+  async signup({
+    email,
+    password,
+    firstName,
+    lastName,
+    isInvited,
+    invitationStatus,
+    invitedBy,
+  }) {
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -27,6 +35,9 @@ export class EmailConnector {
         firstName,
         lastName,
         provider: 'email',
+        isInvited,
+        invitationStatus,
+        invitedBy,
       });
 
       await user.save();
@@ -36,6 +47,9 @@ export class EmailConnector {
         firstName: user.firstName,
         lastName: user.lastName,
         provider: 'email',
+        isInvited,
+        invitationStatus,
+        invitedBy,
       };
     } catch (error) {
       if (error.name === 'MongoServerError' && error.code === 11000) {
@@ -55,6 +69,11 @@ export class EmailConnector {
       const user = await User.findOne({ email });
       if (!user) {
         throw new AuthenticationError('User not found');
+      }
+      if (user?.isInvited) {
+        if (user.invitationStatus == 'pending') {
+          throw new Error('Invitation is pending');
+        }
       }
       if (!(await user.comparePassword(password))) {
         throw new AuthenticationError('Invalid password');

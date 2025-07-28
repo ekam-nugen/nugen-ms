@@ -1,0 +1,46 @@
+{
+    "entitiesJson": [
+        {
+            "title": "organization"
+        },
+        {
+            "title": "Feed"
+        },
+        {
+            "title": "Profile"
+        },
+        {
+            "title": "Chat"
+        },
+        {
+            "title": "Updates"
+        },
+        {
+            "title": "time Clock"
+        },
+        {
+            "title": "Job Scheduling"
+        },
+        {
+            "title": "Quick Tasks"
+        },
+        {
+            "title": "Knowledge Base"
+        },
+        {
+            "title": "Quizzes"
+        },
+        {
+            "title": "Help Desk"
+        },
+        {
+            "title": "Forms"
+        },
+        {
+            "title": "Documents"
+        },
+        {
+            "title": "Celebrations"
+        }
+    ]
+}

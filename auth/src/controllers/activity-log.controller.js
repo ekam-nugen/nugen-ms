@@ -64,3 +64,16 @@ export const getLogsByOrganisation = async (req, res) => {
     });
   }
 };
+
+export const getUserActivityLog = async (req, res) => {
+  const { userId } = req.user;
+  try {
+    const result = await UserActivityLogService.getLogByUserId(userId);
+    return res.status(200).json({
+      data: result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error.message });
+  }
+};

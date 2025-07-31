@@ -80,144 +80,77 @@ export class ChatServices {
       const pipeline = [
         {
           $match: {
-            $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
-            isDeleted: false,
-          },
-        },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'senderId',
-            foreignField: '_id',
-            pipeline: [
+            $or: [
               {
-                $project: {
-                  _id: 1,
-                  firstName: 1,
-                  lastName: 1,
-                  email: 1,
-                  profileImage: 1,
-                },
+                $and: [
+                  {
+                    senderId: userObjectId,
+                  },
+                  {
+                    isGroupChat: false,
+                  },
+                  {
+                    isDeleted: false,
+                  },
+                ],
+              },
+              {
+                $and: [
+                  {
+                    receiverId: userObjectId,
+                  },
+                  {
+                    isGroupChat: false,
+                  },
+                  {
+                    isDeleted: false,
+                  },
+                ],
+              },
+              {
+                $and: [
+                  {
+                    isGroupChat: true,
+                  },
+                  {
+                    isActive: true,
+                  },
+                ],
               },
             ],
-            as: 'senderUserInfo',
           },
         },
-        {
-          $unwind: {
-            path: '$senderUserInfo',
-            preserveNullAndEmptyArrays: false,
-          },
-        },
-        {
-          $unwind: {
-            path: '$archiveThreadUserId',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
-          $addFields: {
-            chatArchived: { $eq: ['$archiveThreadUserId', userObjectId] },
-          },
-        },
-        {
-          $group: {
-            _id: '$_id',
-            senderId: { $first: '$senderId' },
-            receiverId: { $first: '$receiverId' },
-            senderUserInfo: { $first: '$senderUserInfo' },
-            messageType: { $first: '$messageType' },
-            isActive: { $first: '$isActive' },
-            isDeleted: { $first: '$isDeleted' },
-            lastMessage: { $first: '$lastMessage' },
-            isArchived: { $push: '$chatArchived' },
-            pinThread: { $first: '$pinThread' },
-          },
-        },
-        {
-          $addFields: {
-            isArchive: { $anyElementTrue: '$isArchived' },
-          },
-        },
-        { $match: { isArchive: archived } },
-        {
-          $project: {
-            isArchived: 0,
-            isArchive: 0,
-          },
-        },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'receiverId',
-            foreignField: '_id',
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  firstName: 1,
-                  lastName: 1,
-                  email: 1,
-                  profileImage: 1,
-                },
-              },
-            ],
-            as: 'receiverUserInfo',
-          },
-        },
-        {
-          $unwind: {
-            path: '$receiverUserInfo',
-            preserveNullAndEmptyArrays: false,
-          },
-        },
-        { $unwind: { path: '$pinThread', preserveNullAndEmptyArrays: true } },
-        {
-          $addFields: {
-            pinThread: { $eq: ['$pinThread', userObjectId] },
-          },
-        },
-        { $sort: { pinThread: -1, updatedAt: -1 } },
-      ];
-
-      let chatThreads = await ChatThread.aggregate(pipeline);
-
-      const groupChatThreads = await ChatThread.aggregate([
-        { $match: { isGroupChat: true, isActive: true } },
         {
           $lookup: {
             from: 'chat-participant',
             localField: '_id',
             foreignField: 'threadId',
             as: 'memberInfo',
+            pipeline: [
+              {
+                $match: {
+                  userId: userObjectId,
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  userId: 1,
+                },
+              },
+            ],
           },
         },
-        { $unwind: { path: '$memberInfo', preserveNullAndEmptyArrays: true } },
-        { $addFields: { userId: '$memberInfo.userId' } },
-        { $match: { userId: userObjectId } },
-        { $project: { memberInfo: 0 } },
-      ]);
-
-      if (groupChatThreads.length > 0) {
-        chatThreads = [...chatThreads, ...groupChatThreads];
-      }
-
-      return chatThreads;
-    } catch (error) {
-      console.error('Error in getChatThreads:', error);
-      throw new Error('Failed to fetch chat threads');
-    }
-  }
-
-  static async getChatThreadsV2(userId, archived = false) {
-    // updated-api
-    try {
-      const userObjectId = new Types.ObjectId(userId);
-      const pipeline = [
         {
           $match: {
-            $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
-            isDeleted: false,
+            $or: [
+              {
+                isGroupChat: false,
+              },
+              {
+                'memberInfo.userId': userObjectId,
+              },
+            ],
           },
         },
         {
@@ -242,44 +175,7 @@ export class ChatServices {
         {
           $unwind: {
             path: '$senderUserInfo',
-            preserveNullAndEmptyArrays: false,
-          },
-        },
-        {
-          $unwind: {
-            path: '$archiveThreadUserId',
             preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
-          $addFields: {
-            chatArchived: { $eq: ['$archiveThreadUserId', userObjectId] },
-          },
-        },
-        {
-          $group: {
-            _id: '$_id',
-            senderId: { $first: '$senderId' },
-            receiverId: { $first: '$receiverId' },
-            senderUserInfo: { $first: '$senderUserInfo' },
-            messageType: { $first: '$messageType' },
-            isActive: { $first: '$isActive' },
-            isDeleted: { $first: '$isDeleted' },
-            lastMessage: { $first: '$lastMessage' },
-            isArchived: { $push: '$chatArchived' },
-            pinThread: { $first: '$pinThread' },
-          },
-        },
-        {
-          $addFields: {
-            isArchive: { $anyElementTrue: '$isArchived' },
-          },
-        },
-        { $match: { isArchive: archived } },
-        {
-          $project: {
-            isArchived: 0,
-            isArchive: 0,
           },
         },
         {
@@ -304,40 +200,112 @@ export class ChatServices {
         {
           $unwind: {
             path: '$receiverUserInfo',
-            preserveNullAndEmptyArrays: false,
+            preserveNullAndEmptyArrays: true,
           },
         },
-        { $unwind: { path: '$pinThread', preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: {
+            path: '$archiveThreadUserId',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         {
           $addFields: {
-            pinThread: { $eq: ['$pinThread', userObjectId] },
+            chatArchived: {
+              $eq: ['$archiveThreadUserId', userObjectId],
+            },
           },
         },
-        { $sort: { pinThread: -1, updatedAt: -1 } },
-      ];
-
-      let chatThreads = await ChatThread.aggregate(pipeline);
-
-      const groupChatThreads = await ChatThread.aggregate([
-        { $match: { isGroupChat: true, isActive: true } },
         {
-          $lookup: {
-            from: 'chat-participant',
-            localField: '_id',
-            foreignField: 'threadId',
-            as: 'memberInfo',
+          $group: {
+            _id: '$_id',
+            title: {
+              $first: '$title',
+            },
+            description: {
+              $first: '$description',
+            },
+            profile: {
+              $first: '$profile',
+            },
+            senderId: {
+              $first: '$senderId',
+            },
+            receiverId: {
+              $first: '$receiverId',
+            },
+            senderUserInfo: {
+              $first: '$senderUserInfo',
+            },
+            receiverUserInfo: {
+              $first: '$receiverUserInfo',
+            },
+            messageType: {
+              $first: '$messageType',
+            },
+            isActive: {
+              $first: '$isActive',
+            },
+            isDeleted: {
+              $first: '$isDeleted',
+            },
+            lastMessage: {
+              $first: '$lastMessage',
+            },
+            isGroupChat: {
+              $first: '$isGroupChat',
+            },
+            isArchived: {
+              $push: '$chatArchived',
+            },
+            pinThread: {
+              $first: '$pinThread',
+            },
+            updatedAt: {
+              $first: '$updatedAt',
+            },
           },
         },
-        { $unwind: { path: '$memberInfo', preserveNullAndEmptyArrays: true } },
-        { $addFields: { userId: '$memberInfo.userId' } },
-        { $match: { userId: userObjectId } },
-        { $project: { memberInfo: 0 } },
-      ]);
-
-      if (groupChatThreads.length > 0) {
-        chatThreads = [...chatThreads, ...groupChatThreads];
-      }
-
+        {
+          $addFields: {
+            isArchive: {
+              $anyElementTrue: '$isArchived',
+            },
+          },
+        },
+        {
+          $match: {
+            isArchive: archived,
+          },
+        },
+        {
+          $project: {
+            isArchived: 0,
+            isArchive: 0,
+          },
+        },
+        {
+          $unwind: {
+            path: '$pinThread',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            pinThread: {
+              $eq: ['$pinThread', userObjectId],
+            },
+          },
+        },
+        {
+          $sort: {
+            pinThread: -1,
+            updatedAt: -1,
+          },
+        },
+      ];
+      // console.log(JSON.stringify(pipeline));
+      const chatThreads = await ChatThread.aggregate(pipeline);
       return chatThreads;
     } catch (error) {
       console.error('Error in getChatThreads:', error);
